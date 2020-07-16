@@ -5,7 +5,8 @@ use Ramphor\Sql as SqlBuilder;
 use Ramphor\Rake\Abstracts\Driver as DriverAbstract;
 use Ramphor\Rake\Constracts\SQLQueryBuilder;
 
-class Driver extends DriverAbstract {
+class Driver extends DriverAbstract
+{
     public const DRIVER_NAME = 'wordpress';
 
     protected $dbInstance;
