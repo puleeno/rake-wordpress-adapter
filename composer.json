@@ -1,0 +1,16 @@
+{
+    "name": "puleeno/rake-wordpress-adapter",
+    "description": "The WordPress adapter for Rake crawler/spider framework",
+    "type": "library",
+    "require": {
+        "ramphor/rake": "dev-master"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Puleeno Nguyen",
+            "email": "puleeno@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
