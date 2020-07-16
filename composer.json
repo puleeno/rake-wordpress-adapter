@@ -18,7 +18,7 @@
             "Puleeno\\Rake\\WordPress\\": "src/"
         },
         "files": [
-            "./rake-wordpress-helpers.php"
+            "./helpers.php"
         ]
     }
 }
