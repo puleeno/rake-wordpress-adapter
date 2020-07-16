@@ -39,6 +39,12 @@ class Driver extends DriverAbstract
             ->get_results($query);
     }
 
+    public function row(SqlBuilder $query)
+    {
+        return $this->dbInstance
+            ->get_row($query);
+    }
+
     public function var(SqlBuilder $query)
     {
         return $this->dbInstance
