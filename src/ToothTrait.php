@@ -107,7 +107,7 @@ trait ToothTrait
         return wp_update_post([
             'ID' => $resource->newGuid,
             'post_type' => $resource->newType,
-            'content' => $resource->content,
+            'post_content' => $resource->content,
         ]);
     }
 
