@@ -96,7 +96,8 @@ trait ToothTrait
         return $resource;
     }
 
-    public function validateSystemResource($postId, $postType): bool {
+    public function validateSystemResource($postId, $postType): bool
+    {
         $post = get_post($postId);
         if (is_null($post)) {
             return false;
