@@ -5,6 +5,7 @@ use Psr\Http\Message\StreamInterface;
 use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Client;
 use Ramphor\Rake\Facades\Resources;
+use Ramphor\Rake\Facades\Document;
 
 use function media_handle_sideload;
 
@@ -67,8 +68,8 @@ trait ToothTrait
                     'name' => $this->generateFileName($resource->guid, $meta['uri']),
                     'tmp_name' => $meta['uri']
                 );
-                $post_id = '0';
-                $newGuid = media_handle_sideload($file_array, $post_id);
+                $postId = '0';
+                $newGuid = media_handle_sideload($file_array, $postId);
                 if (is_wp_error($newGuid)) {
                     // Will logging later
                     throw new \Exception($newGuid->get_error_message());
@@ -102,7 +103,7 @@ trait ToothTrait
         return $post->post_type = trim($postType);
     }
 
-    public function updateSystemResource(Resource $resource)
+    public function updatePostResource(Resource $resource)
     {
         return wp_update_post([
             'ID' => $resource->newGuid,
@@ -111,7 +112,51 @@ trait ToothTrait
         ]);
     }
 
-    public function updateParentSystemResource(Resource $resource, Resource $parentResource)
+    public function updateSystemResource(Resource $resource, Resource $parentResource)
     {
+        $resourceType = preg_replace_callback(['/[_|-](\w)/', '/^(\w)/', '/\s/'], function ($match) {
+            return strtoupper($match[1]);
+        }, $resource->type);
+        $callback     = [$this, 'update' . $resourceType];
+        if (is_callable($callback)) {
+            return $callback($parentResource, $resource->newGuid, $resource->guid, $resource->newType);
+        }
+    }
+
+    public function updateContentImage(Resource $parent, $attachmentId, $oldUrl)
+    {
+        $postId   = $parent->newGuid;
+        $postType = $parent->newType;
+        $post     = get_post($postId);
+        $document = Document::load($post->post_content);
+        $images   = $document->find('img[src='. $oldUrl.']');
+
+        foreach ($images as $image) {
+            $imageUrl = wp_get_attachment_url($attachmentId);
+            if ($imageUrl === false) {
+                $image->delete();
+                continue;
+            }
+            $image->setAttribute('src', $imageUrl);
+        }
+
+        $newContent = $document->innerHtml;
+        $parent->setContent($newContent);
+        $parent->save();
+
+        return wp_update_post([
+            'ID' => $postId,
+            'post_type' => $postType,
+            'post_content' => $newContent,
+        ]);
+    }
+
+    public function updateCoverImage(Resource $resource, $attachmentId)
+    {
+        return update_post_meta(
+            $resource->newGuid,
+            '_thumbnail_id',
+            $attachmentId
+        );
     }
 }
