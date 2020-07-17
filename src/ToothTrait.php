@@ -6,7 +6,6 @@ use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Client;
 use Ramphor\Rake\Facades\Resources;
 
-use function download_url;
 use function media_handle_sideload;
 
 trait ToothTrait
@@ -15,10 +14,6 @@ trait ToothTrait
 
     protected function requireWordPressSupports()
     {
-        if (!function_exists('download_url')) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-        }
-
         if (!function_exists('media_handle_sideload')) {
             require_once ABSPATH . "wp-admin" . '/includes/image.php';
             require_once ABSPATH . 'wp-admin/includes/media.php';
