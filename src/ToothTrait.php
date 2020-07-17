@@ -30,9 +30,21 @@ trait ToothTrait
         return $this->resourceType;
     }
 
-    protected function generateFileName($url)
+    protected function generateFileName($url, $realFile)
     {
-        return basename($url);
+        $fileName  = basename($url);
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        if (pl_validate_extension($extension)) {
+            return $fileName;
+        }
+
+        $mime = mime_content_type($realFile);
+        $newExtension = pl_convert_mime_type_to_extension($mime);
+        if (empty($extension)) {
+            return sprintf('%s%s', $fileName, $newExtension);
+        }
+
+        return str_replace($extension, ltrim($newExtension, '.'), $fileName);
     }
 
     public function downloadResource(Resource $resource): Resource
@@ -54,7 +66,7 @@ trait ToothTrait
             $newType        = $this->resolveNewResourceType($resource);
             if (is_null($existsResource)) {
                 $file_array = array(
-                    'name' => $this->generateFileName($resource->guid),
+                    'name' => $this->generateFileName($resource->guid, $meta['uri']),
                     'tmp_name' => $meta['uri']
                 );
                 $post_id = '0';
