@@ -50,16 +50,18 @@ trait ToothTrait
     public function downloadResource(Resource $resource): Resource
     {
         $this->requireWordPressSupports();
+
         try {
             $response   = Client::request('GET', $resource->guid);
             $stream     = $response->getBody();
+            $tempFile   = tmpfile();
             if ($stream instanceof StreamInterface && $stream->isWritable()) {
-                $tempFile = tmpfile();
-                $meta     = stream_get_meta_data($tempFile);
                 fwrite($tempFile, $stream);
             } else {
                 throw new \Exception("data is not file or is not writeable");
             }
+            
+            $meta           = stream_get_meta_data($tempFile);
             $hashFile       = Resources::generateHash($meta['uri'], $resource->type);
             $existsResource = Resources::getFromHash($hashFile);
             $newGuid        = null;
@@ -73,7 +75,7 @@ trait ToothTrait
                 $newGuid = media_handle_sideload($file_array, $post_id);
                 if (is_wp_error($newGuid)) {
                     // Will logging later
-                    return $resource;
+                    throw new \Exception($newGuid->get_error_message());
                 }
                 $resource->saveHash($hashFile);
             } else {
@@ -84,11 +86,11 @@ trait ToothTrait
             $resource->setNewType($newType);
             $resource->setNewGuid($newGuid);
             $resource->imported();
-
-            // Close temporary handle
-            @fclose($tempFile);
         } catch (Exception $e) {
             // Will logging later
+        } finally {
+            // Close temporary handle
+            @fclose($tempFile);
         }
 
         return $resource;
