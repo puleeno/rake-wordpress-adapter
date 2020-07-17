@@ -114,8 +114,4 @@ trait ToothTrait
     public function updateParentSystemResource(Resource $resource, Resource $parentResource)
     {
     }
-
-    public function updateChildSystemResource(Resource $resource, $childrens)
-    {
-    }
 }
