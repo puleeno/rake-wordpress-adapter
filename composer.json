@@ -3,7 +3,8 @@
     "description": "The WordPress adapter for Rake crawler/spider framework",
     "type": "library",
     "require": {
-        "ramphor/rake": "*"
+        "ramphor/rake": "*",
+        "ramphor/logger": "*"
     },
     "license": "MIT",
     "authors": [
