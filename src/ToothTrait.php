@@ -60,12 +60,12 @@ trait ToothTrait
             } else {
                 throw new \Exception("data is not file or is not writeable");
             }
-            
+
             $meta           = stream_get_meta_data($tempFile);
             $hashFile       = Resources::generateHash($meta['uri'], $resource->type);
-            $existsResource = Resources::getFromHash($hashFile);
-            $newGuid        = null;
             $newType        = $this->resolveNewResourceType($resource);
+            $newGuid        = null;
+            $existsResource = Resources::getFromHash($hashFile, $newType);
             if (is_null($existsResource)) {
                 $file_array = array(
                     'name' => $this->generateFileName($resource->guid, $meta['uri']),
@@ -77,7 +77,7 @@ trait ToothTrait
                     // Will logging later
                     throw new \Exception($newGuid->get_error_message());
                 }
-                $resource->saveHash($hashFile);
+                $resource->saveHash($hashFile, $newType, $newGuid);
             } else {
                 $newGuid = $existsResource->newGuid;
                 $newType = $existsResource->type;
