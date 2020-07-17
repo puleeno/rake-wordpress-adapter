@@ -117,9 +117,16 @@ trait ToothTrait
         $resourceType = preg_replace_callback(['/[_|-](\w)/', '/^(\w)/', '/\s/'], function ($match) {
             return strtoupper($match[1]);
         }, $resource->type);
-        $callback     = [$this, 'update' . $resourceType];
+        $callback = [$this, 'update' . $resourceType];
+
         if (is_callable($callback)) {
-            return $callback($parentResource, $resource->newGuid, $resource->guid, $resource->newType);
+            return call_user_func(
+                $callback,
+                $parentResource,
+                $resource->newGuid,
+                $resource->guid,
+                $resource->newType
+            );
         }
     }
 
@@ -165,13 +172,13 @@ trait ToothTrait
         return $type;
     }
 
-    public function updateGalleryImage(Resource $resource, $attachmentId)
+    public function updateGallaryImage(Resource $resource, $attachmentId)
     {
         $postId   = $resource->newGuid;
         $postType = $this->getPostType($resource->newType);
 
         if ($postType === 'product') {
-            $galleryImages   = explode(',', get_post_type($postId, '_product_image_gallery', true));
+            $galleryImages   = explode(',', get_post_meta($postId, '_product_image_gallery', true));
             $galleryImages[] = $attachmentId;
 
             return update_post_meta(
