@@ -15,7 +15,8 @@ trait ToothTrait
     protected function requireWordPressSupports()
     {
         if (!function_exists('media_handle_sideload')) {
-            require_once ABSPATH . "wp-admin" . '/includes/image.php';
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH . 'wp-admin/includes/image.php';
             require_once ABSPATH . 'wp-admin/includes/media.php';
         }
     }
@@ -99,5 +100,22 @@ trait ToothTrait
         }
 
         return $post->post_type = trim($postType);
+    }
+
+    public function updateSystemResource(Resource $resource)
+    {
+        return wp_update_post([
+            'ID' => $resource->newGuid,
+            'post_type' => $resource->newType,
+            'content' => $resource->content,
+        ]);
+    }
+
+    public function updateParentSystemResource(Resource $resource, Resource $parentResource)
+    {
+    }
+
+    public function updateChildSystemResource(Resource $resource, $childrens)
+    {
     }
 }
