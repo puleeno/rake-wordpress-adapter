@@ -80,7 +80,7 @@ trait ToothTrait
                 $resource->saveHash($hashFile, $newType, $newGuid);
             } else {
                 $newGuid = $existsResource->newGuid;
-                $newType = $existsResource->type;
+                $newType = $existsResource->newType;
             }
 
             $resource->setNewType($newType);
