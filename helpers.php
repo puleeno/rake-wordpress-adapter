@@ -15,15 +15,15 @@ function fetch_extension_mime_types()
         }
     }
 
-    // Default mine types;
+    // Default mime types;
     $mimes  = [];
     $source = 'https://gist.githubusercontent.com/AshHeskes/6038140/raw/file-extension-to-mime-types.json';
     try {
-        $response = Client::request('GET', $sourceMineTypes);
+        $response = Client::request('GET', $source);
         $body     = $response->getBody();
         $mimes    = json_decode($body, true);
 
-        // Caching mine types
+        // Caching mime types
         $h = @fopen($cachePath, 'w');
         @fwrite($h, $body);
         @fclose($h);
@@ -36,11 +36,11 @@ function fetch_extension_mime_types()
 
 function pl_validate_extension($extension)
 {
-    $mines = fetch_extension_mime_types();
+    $mimes = fetch_extension_mime_types();
     if (substr($extension, 0, 1) !== '.') {
         $extension = '.' . $extension;
     }
-    return isset($mines[$extension]);
+    return isset($mimes[$extension]);
 }
 
 function pl_convert_mime_type_to_extension($mime)
