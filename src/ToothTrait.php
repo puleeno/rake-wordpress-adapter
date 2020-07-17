@@ -159,4 +159,26 @@ trait ToothTrait
             $attachmentId
         );
     }
+
+    public function getPostType($type)
+    {
+        return $type;
+    }
+
+    public function updateGalleryImage(Resource $resource, $attachmentId)
+    {
+        $postId   = $resource->newGuid;
+        $postType = $this->getPostType($resource->newType);
+
+        if ($postType === 'product') {
+            $galleryImages   = explode(',', get_post_type($postId, '_product_image_gallery', true));
+            $galleryImages[] = $attachmentId;
+
+            return update_post_meta(
+                $postId,
+                '_product_image_gallery',
+                implode(',', array_unique($galleryImages))
+            );
+        }
+    }
 }
