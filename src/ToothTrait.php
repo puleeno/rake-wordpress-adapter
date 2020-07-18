@@ -5,7 +5,7 @@ use Psr\Http\Message\StreamInterface;
 use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Client;
 use Ramphor\Rake\Facades\Resources;
-use Ramphor\Rake\Facades\Document;
+use PHPHtmlParser\Dom as Document;
 
 use function media_handle_sideload;
 
@@ -137,9 +137,11 @@ trait ToothTrait
         $postId   = $parent->newGuid;
         $postType = $parent->newType;
         $post     = get_post($postId);
-        $document = Document::load($post->post_content);
-        $images   = $document->find('img[src='. $oldUrl.']');
 
+        $document = new Document();
+        $document->load($post->post_content);
+
+        $images   = $document->find('img[src='. $oldUrl.']');
         foreach ($images as $image) {
             $imageUrl = wp_get_attachment_url($attachmentId);
             if ($imageUrl === false) {
