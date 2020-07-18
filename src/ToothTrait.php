@@ -181,7 +181,7 @@ trait ToothTrait
 
         if ($postType === 'product') {
             $postThumbnailId = get_post_thumbnail_id($postId);
-            if ($postThumbnailId === $attachmentId) {
+            if ($postThumbnailId == $attachmentId) {
                 return;
             }
 
