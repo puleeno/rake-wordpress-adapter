@@ -64,12 +64,14 @@ trait ToothTrait
             $newGuid        = null;
             $existsResource = Resources::getFromHash($hashFile, $newType);
             if (is_null($existsResource)) {
-                $file_array = array(
+                $file_array     = array(
                     'name' => $this->generateFileName($resource->guid, $meta['uri']),
                     'tmp_name' => $meta['uri']
                 );
-                $postId = '0';
-                $newGuid = media_handle_sideload($file_array, $postId);
+                $parentResource = Resources::findParent($resource->id);
+                $postId         = is_null($parentResource) ? 0 : (int)$parentResource->newGuid;
+                $newGuid        = media_handle_sideload($file_array, $postId);
+
                 if (is_wp_error($newGuid)) {
                     // Will logging later
                     throw new \Exception($newGuid->get_error_message());
