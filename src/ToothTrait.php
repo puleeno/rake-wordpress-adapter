@@ -178,6 +178,11 @@ trait ToothTrait
         $postType = $this->getPostType($resource->newType);
 
         if ($postType === 'product') {
+            $postThumbnailId = get_post_thumbnail_id($postId);
+            if ($postThumbnailId === $attachmentId) {
+                return;
+            }
+
             $galleryImages   = explode(',', get_post_meta($postId, '_product_image_gallery', true));
             $galleryImages[] = $attachmentId;
 
