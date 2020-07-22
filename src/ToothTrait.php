@@ -44,7 +44,7 @@ trait ToothTrait
         return str_replace($extension, ltrim($newExtension, '.'), $fileName);
     }
 
-    public function downloadResource(Resource $resource): Resource
+    public function downloadResource(Resource &$resource): Resource
     {
         $this->requireWordPressSupports();
 
