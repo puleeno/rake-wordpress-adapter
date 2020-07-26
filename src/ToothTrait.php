@@ -31,17 +31,19 @@ trait ToothTrait
     {
         $fileName  = basename($url);
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        if ($extension !== "") {
+            $fileNameWithoutExtension = sanitize_title(str_replace('.' . $extension, '', $fileName));
+        } else {
+            $fileNameWithoutExtension = sanitize_title($fileName);
+        }
         if (pl_validate_extension($extension)) {
-            return $fileName;
+            return sprintf('%s.%s', $fileNameWithoutExtension, $extension);
         }
 
-        $mime = mime_content_type($realFile);
+        $mime         = mime_content_type($realFile);
         $newExtension = pl_convert_mime_type_to_extension($mime);
-        if (empty($extension)) {
-            return sprintf('%s%s', $fileName, $newExtension);
-        }
 
-        return str_replace($extension, ltrim($newExtension, '.'), $fileName);
+        return sprintf('%s%s', $fileNameWithoutExtension, $newExtension);
     }
 
     public function downloadResource(Resource &$resource): Resource
