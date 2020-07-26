@@ -32,7 +32,7 @@ class SeoImporter {
     }
 
 
-    public function importSeoTitle($postId, $seoTitle) {
+    public function importTitle($postId, $seoTitle) {
         foreach($this->seoPlugins as $seoInfo) {
             if (!isset($seoInfo['metadata']) || !isset($seoInfo['fields'])) {
                 continue;
@@ -47,7 +47,7 @@ class SeoImporter {
         }
     }
 
-    public function importSeoDescription($postId, $seoDescription) {
+    public function importDescription($postId, $seoDescription) {
         foreach($this->seoPlugins as $seoInfo) {
             if (!isset($seoInfo['metadata']) || !isset($seoInfo['fields'])) {
                 continue;
