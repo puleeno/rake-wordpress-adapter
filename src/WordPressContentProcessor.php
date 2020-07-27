@@ -14,11 +14,19 @@ abstract class WordPressContentProcessor extends Processor
         $gallaryImages = $this->feedItem->galleryImages;
 
         foreach ($document->find('div.gallery[id^="gallery"]') as $gallery) {
-            $images = [];
+            $images     = [];
+            $attributes = [];
+            $classes    = $gallery->getAttribute('class');
+
             foreach ($gallery->find('img') as $image) {
                 $parent = $image->getParent();
                 if ($parent->tag->name() === "a") {
                     $image_url = $parent->getAttribute('href');
+                    if (!preg_match('/\.\w{2,}$/', $image_url)) {
+                        $image_url = $this->convertWordPressImageSizes($image->getAttribute('src'));
+                    } else {
+                        $attributes['link'] = 'file';
+                    }
                 } else {
                     $image_url = $this->convertWordPressImageSizes($image->getAttribute('src'));
                 }
@@ -26,7 +34,15 @@ abstract class WordPressContentProcessor extends Processor
                 $images[] = $image_url;
             }
 
-            $attributes      = apply_filters('rake_wordpress_gallery_attributes', []);
+
+            if (preg_match('/gallery\-columns\-(\d{1,})/', $classes, $matches) && $matches[1] != 3) {
+                $attributes['columns'] = $matches[1];
+            }
+            if (preg_match('/gallery\-size\-(\w{1,})/', $classes, $matches)) {
+                $attributes['size'] = $matches[1];
+            }
+
+            $attributes      = apply_filters('rake_wordpress_gallery_attributes', $attributes);
             $new_shortcode   = apply_filters('rake_wordpress_gallery_shortcode', 'gallery');
             $attributes_text = '';
 
