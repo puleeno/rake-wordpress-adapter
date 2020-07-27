@@ -24,7 +24,7 @@ abstract class WordPressContentProcessor extends Processor
                     $imageUrl = $parent->getAttribute('href');
                     if (!preg_match('/\.\w{2,}$/', $imageUrl)) {
                         $imageUrl = $this->convertWordPressImageSizes($image->getAttribute('src'));
-                    } else {
+                    } elseif (empty($attributes['link'])) {
                         $attributes['link'] = 'file';
                     }
                 } else {
@@ -54,7 +54,7 @@ abstract class WordPressContentProcessor extends Processor
 
             if (!empty($attributes)) {
                 foreach ($attributes as $attribute => $value) {
-                    $attributes_text = sprintf(' %s=%s', $attribute, $value);
+                    $attributes_text .= sprintf(' %s="%s"', $attribute, $value);
                 }
             }
             $gallery_shortcode = new TextNode(sprintf(
