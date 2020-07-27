@@ -4,7 +4,6 @@ namespace Puleeno\Rake\WordPress;
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\TextNode;
 use Ramphor\Rake\Abstracts\Processor;
-use Ramphor\Rake\Facades\Client;
 
 abstract class WordPressContentProcessor extends Processor
 {
