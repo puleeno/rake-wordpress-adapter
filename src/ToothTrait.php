@@ -164,10 +164,10 @@ trait ToothTrait
         ]);
     }
 
-    public function updateCoverImage(Resource $resource, $attachmentId)
+    public function updateCoverImage(Resource $postResource, $attachmentId)
     {
         return update_post_meta(
-            $resource->newGuid,
+            $postResource->newGuid,
             '_thumbnail_id',
             $attachmentId
         );
@@ -178,10 +178,10 @@ trait ToothTrait
         return $type;
     }
 
-    public function updateGallaryImage(Resource $resource, $attachmentId)
+    public function updateGallaryImage(Resource $postResource, $attachmentId)
     {
-        $postId   = $resource->newGuid;
-        $postType = $this->getPostType($resource->newType);
+        $postId   = $postResource->newGuid;
+        $postType = $this->getPostType($postResource->newType);
 
         if ($postType === 'product') {
             $postThumbnailId = get_post_thumbnail_id($postId);
