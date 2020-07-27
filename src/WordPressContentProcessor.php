@@ -1,9 +1,10 @@
 <?php
 namespace Puleeno\Rake\WordPress;
 
-use Ramphor\Rake\Abstracts\Processor;
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\TextNode;
+use Ramphor\Rake\Abstracts\Processor;
+use Ramphor\Rake\Facades\Client;
 
 abstract class WordPressContentProcessor extends Processor
 {
@@ -21,17 +22,23 @@ abstract class WordPressContentProcessor extends Processor
             foreach ($gallery->find('img') as $image) {
                 $parent = $image->getParent();
                 if ($parent->tag->name() === "a") {
-                    $image_url = $parent->getAttribute('href');
-                    if (!preg_match('/\.\w{2,}$/', $image_url)) {
-                        $image_url = $this->convertWordPressImageSizes($image->getAttribute('src'));
+                    $imageUrl = $parent->getAttribute('href');
+                    if (!preg_match('/\.\w{2,}$/', $imageUrl)) {
+                        $imageUrl = $this->convertWordPressImageSizes($image->getAttribute('src'));
                     } else {
                         $attributes['link'] = 'file';
                     }
                 } else {
-                    $image_url = $this->convertWordPressImageSizes($image->getAttribute('src'));
+                    $imageUrl = $this->convertWordPressImageSizes($image->getAttribute('src'));
                 }
-                $gallaryImages[]= $image_url;
-                $images[] = $image_url;
+
+                // Check image is not deleted else remove it in gallery
+                if (!$this->checkImageIsFound($imageUrl)) {
+                    continue;
+                }
+
+                $images[]        = $imageUrl;
+                $gallaryImages[] = $imageUrl;
             }
 
 
