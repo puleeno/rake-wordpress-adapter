@@ -52,10 +52,10 @@ abstract class WordPressContentProcessor extends Processor
                 }
             }
             $gallery_shortcode = new TextNode(sprintf(
-                '[%s ids="%s"]%s',
+                '[%s%s ids="%s"]',
                 $new_shortcode,
+                $attributes_text,
                 implode(', ', $images),
-                $attributes_text
             ));
             $gallery->getParent()->replaceChild($gallery->id(), $gallery_shortcode);
         }
