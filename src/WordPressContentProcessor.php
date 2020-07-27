@@ -25,7 +25,7 @@ abstract class WordPressContentProcessor extends Processor
                 $gallaryImages[]= $image_url;
                 $images[] = $image_url;
             }
-            
+
             $attributes      = apply_filters('rake_wordpress_gallery_attributes', []);
             $new_shortcode   = apply_filters('rake_wordpress_gallery_shortcode', 'gallery');
             $attributes_text = '';
