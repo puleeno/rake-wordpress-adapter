@@ -7,6 +7,10 @@ use Ramphor\Rake\Abstracts\Processor;
 
 abstract class WordPressContentProcessor extends Processor
 {
+    protected $tocPlugins = [
+        'easy_table_of_content' => '#toc_container',
+    ];
+
     public function convertHtmlGalleryFromContent()
     {
         $document = new Dom();
@@ -76,5 +80,18 @@ abstract class WordPressContentProcessor extends Processor
             '$1',
             $wpImageUrl
         );
+    }
+
+    public function convertTableOfContent()
+    {
+        $document = new Dom();
+        $document->load($this->feedItem->content);
+
+        foreach ($this->tocPlugins as $tocRule) {
+            foreach ($document->find($tocRule) as $toc_container) {
+                $toc_container->delete();
+            }
+        }
+        $this->feedItem->setProperty('content', $document->innerHtml);
     }
 }
