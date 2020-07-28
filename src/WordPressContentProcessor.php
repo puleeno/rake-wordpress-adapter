@@ -98,7 +98,7 @@ abstract class WordPressContentProcessor extends Processor
         return preg_replace(
             '/\-\d{1,}x\d{1,}(\.\w{2,})$/',
             '$1',
-            $wpImageUrl
+            $imageUrl
         );
     }
 }
