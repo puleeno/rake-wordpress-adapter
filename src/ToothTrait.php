@@ -4,6 +4,7 @@ namespace Puleeno\Rake\WordPress;
 use Psr\Http\Message\StreamInterface;
 use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Client;
+use Ramphor\Rake\Facades\Logger;
 use Ramphor\Rake\Facades\Resources;
 use PHPHtmlParser\Dom as Document;
 
@@ -75,7 +76,7 @@ trait ToothTrait
                 $newGuid        = media_handle_sideload($file_array, $postId);
 
                 if (is_wp_error($newGuid)) {
-                    // Will logging later
+                    // Logging in the catch block
                     throw new \Exception($newGuid->get_error_message());
                 }
                 $resource->saveHash($hashFile, $newType, $newGuid);
@@ -88,7 +89,11 @@ trait ToothTrait
             $resource->setNewGuid($newGuid);
             $resource->imported();
         } catch (Exception $e) {
-            // Will logging later
+            Logger::error($e->getMessage(), [
+                'resource_id' => $resource->id,
+                'guid' => $resource->guid,
+                'type' => $resource->type,
+            ]);
         } finally {
             // Close temporary handle
             @fclose($tempFile);

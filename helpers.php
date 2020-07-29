@@ -1,5 +1,6 @@
 <?php
 use Ramphor\Rake\Facades\Client;
+use Ramphor\Rake\Facades\Logger;
 
 /**
  * Credit to @AshHeskes(Ash Heskes)
@@ -28,7 +29,7 @@ function fetch_extension_mime_types()
         @fwrite($h, $body);
         @fclose($h);
     } catch (\Exception $e) {
-        // Will logging later
+        Logger::error($e->getMessage());
     }
 
     return $mimes;
