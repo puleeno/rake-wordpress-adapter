@@ -5,7 +5,7 @@ use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\TextNode;
 use Ramphor\Rake\Abstracts\Processor;
 
-abstract class WordPressContentProcessor extends Processor
+abstract class WordPressProcessor extends Processor
 {
     protected $tocPlugins = [
         'easy_table_of_content' => '#toc_container',
