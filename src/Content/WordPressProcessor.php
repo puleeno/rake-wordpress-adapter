@@ -4,6 +4,7 @@ namespace Puleeno\Rake\WordPress\Content;
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\TextNode;
 use Ramphor\Rake\Abstracts\Processor;
+use Ramphor\Rake\Facades\Logger;
 
 abstract class WordPressProcessor extends Processor
 {
@@ -37,6 +38,10 @@ abstract class WordPressProcessor extends Processor
 
                 // Check image is not deleted else remove it in gallery
                 if (!$this->checkImageIsFound($imageUrl)) {
+                    Logger::warning(sprintf('The image has URL %s is not found', $imageUrl), [
+                        'processor' => get_class($this),
+                        'tooth' => $this->tooth->getId()
+                    ]);
                     continue;
                 }
 
