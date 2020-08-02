@@ -215,7 +215,7 @@ trait WordPressTooth
             $postThumbnailId = get_post_thumbnail_id($postId);
             if ($postThumbnailId == $attachmentId) {
                 Logger::info(sprintf(
-                    'The thumbnail %d is already exists as feature image so it is skipped',
+                    'The thumbnail #%d is already exists as feature image so it is skipped',
                     $postThumbnailId
                 ));
                 return;
