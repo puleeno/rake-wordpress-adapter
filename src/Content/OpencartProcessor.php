@@ -25,7 +25,7 @@ abstract class OpencartProcessor extends Processor
             ], $imageUrl);
 
             if ($imageUrl !== $convertedUrl) {
-                Logger::debug('The image %s is converted to %s', $imageUrl, $convertedUrl);
+                Logger::debug(sprintf('The image %s is converted to %s', $imageUrl, $convertedUrl));
             }
             return $convertedUrl;
         }
