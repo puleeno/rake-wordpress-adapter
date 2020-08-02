@@ -34,11 +34,12 @@ trait WooCommerceProcessor
 
         $productName      = is_null($title) ? $this->feedItem->title : $title;
         $originalId       = $this->feedItem->getMeta('original_id', null);
-        $this->importedId = $this->checkIsExists($productName, $originalId);
+        $this->importedId = $this->checkIsExists($productName, $originalId, 'product');
 
         if ($this->importedId > 0) {
             return $this->importedId;
         }
+
         $product       = new WC_Product_Simple();
         $productPrice  = $this->feedItem->getMeta('product_price', 0);
 
@@ -46,7 +47,12 @@ trait WooCommerceProcessor
         $product->set_description((string)$productContent);
         $product->set_regular_price($productPrice);
 
-        return $this->importedId = $product->save();
+        $this->importedId = $product->save();
+
+        if ($this->importedId > 0) {
+            update_post_meta($this->importedId, '_original_id', $originalId);
+        }
+        return $this->importedId;
     }
 
     /**
@@ -84,6 +90,10 @@ trait WooCommerceProcessor
      * @return void
      */
     public function setProductType($productType)
+    {
+    }
+
+    public function importProductCategories($productCategories, $isNested = false)
     {
     }
 }
