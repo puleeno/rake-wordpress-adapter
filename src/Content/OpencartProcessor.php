@@ -2,6 +2,7 @@
 namespace Puleeno\Rake\WordPress\Content;
 
 use Ramphor\Rake\Abstracts\Processor;
+use Ramphor\Rake\Facades\Logger;
 
 abstract class OpencartProcessor extends Processor
 {
@@ -14,7 +15,7 @@ abstract class OpencartProcessor extends Processor
      */
     public function convertImageUrl($imageUrl)
     {
-        if (preg_match('/\/image\/cache/', $imageUrl) && preg_match('/\-\d{1,}x\d{1,}(\.\w{2,})$/')) {
+        if (preg_match('/\/image\/cache/', $imageUrl) && preg_match('/\-\d{1,}x\d{1,}(\.\w{2,})$/', $imageUrl)) {
             $convertedUrl = preg_replace([
                 '/\/image\/cache/',
                 '/\-\d{1,}x\d{1,}(\.\w{2,})$/'
