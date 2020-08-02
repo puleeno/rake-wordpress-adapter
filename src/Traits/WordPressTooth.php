@@ -168,10 +168,17 @@ trait WordPressTooth
         foreach ($images as $image) {
             $imageUrl = wp_get_attachment_url($attachmentId);
             if ($imageUrl === false) {
+                Logger::warning(sprintf(
+                    'Attachment #%d is not exists so this image(%s) will be removed',
+                    $attachmentId,
+                    $oldUrl
+                ));
                 $image->delete();
                 continue;
             }
             $image->setAttribute('src', $imageUrl);
+
+            Logger::debug(sprintf('The image(%s) is replated by new URL %s', $oldUrl, $imageUrl));
         }
 
         $newContent = $document->innerHtml;
@@ -207,12 +214,17 @@ trait WordPressTooth
         if ($postType === 'product') {
             $postThumbnailId = get_post_thumbnail_id($postId);
             if ($postThumbnailId == $attachmentId) {
+                Logger::info(sprintf(
+                    'The thumbnail %d is already exists as feature image so it is skipped',
+                    $postThumbnailId
+                ));
                 return;
             }
 
             $galleryImages   = explode(',', get_post_meta($postId, '_product_image_gallery', true));
             $galleryImages[] = $attachmentId;
 
+            Logger::debug(sprintf('The attachment #%d is appended to product gallery', $attachmentId));
             return update_post_meta(
                 $postId,
                 '_product_image_gallery',
