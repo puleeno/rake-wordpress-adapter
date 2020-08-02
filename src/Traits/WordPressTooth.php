@@ -1,6 +1,8 @@
 <?php
 namespace Puleeno\Rake\WordPress\Traits;
 
+use Error;
+use Exception;
 use Psr\Http\Message\StreamInterface;
 use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Client;
@@ -141,12 +143,26 @@ trait WordPressTooth
 
     public function updateContentImage(Resource $parent, $attachmentId, $oldUrl)
     {
+        $document = new Document();
         $postId   = $parent->newGuid;
         $postType = $parent->newType;
         $post     = get_post($postId);
+        if (is_null($post)) {
+            Loggerr::warning(sprintf('The post has ID %d is not found', $postId), [
+                'post_id' => $parent->newGuid,
+                'post_type' => $parent->newType,
+            ]);
+            return;
+        }
 
-        $document = new Document();
-        $document->load($post->post_content);
+        try {
+            $document->load($post->post_content);
+        } catch (Error | Exeption $e) {
+            // Override document content with empty string
+            $document->load('');
+
+            Logger::warning($e->getMessage(), $post->to_array());
+        }
 
         $images   = $document->find('img[src='. $oldUrl.']');
         foreach ($images as $image) {
