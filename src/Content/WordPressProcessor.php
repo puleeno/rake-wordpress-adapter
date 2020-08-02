@@ -1,5 +1,5 @@
 <?php
-namespace Puleeno\Rake\WordPress;
+namespace Puleeno\Rake\WordPress\Content;
 
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\TextNode;

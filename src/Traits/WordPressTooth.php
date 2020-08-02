@@ -1,5 +1,5 @@
 <?php
-namespace Puleeno\Rake\WordPress;
+namespace Puleeno\Rake\WordPress\Traits;
 
 use Psr\Http\Message\StreamInterface;
 use Ramphor\Rake\Resource;
@@ -10,7 +10,7 @@ use PHPHtmlParser\Dom as Document;
 
 use function media_handle_sideload;
 
-trait ToothTrait
+trait WordPressTooth
 {
     protected $resourceType = 'attachment';
 
