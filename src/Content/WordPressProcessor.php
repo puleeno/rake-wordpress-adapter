@@ -119,7 +119,7 @@ abstract class WordPressProcessor extends Processor
         );
 
         if ($imageUrl !== $convertedUrl) {
-            Logger::debug('The image %s is converted to %s', $imageUrl, $convertedUrl);
+            Logger::info(sprintf('The image %s is converted to %s', $imageUrl, $convertedUrl));
         }
         return $convertedUrl;
     }
