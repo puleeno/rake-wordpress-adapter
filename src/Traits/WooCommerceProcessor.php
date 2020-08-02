@@ -23,9 +23,13 @@ trait WooCommerceProcessor
             return new WP_Error('rake_import', 'The WooCommerce product is not registed in your system');
         }
         if (is_null($productContent)) {
-            $this->feedItem->setProperty('content', $productContent);
+            $productContent = (string)$productContent;
+            $this->feedItem->setProperty(
+                'content',
+                $productContent
+            );
         } else {
-            $productContent = $this->feedItem->content;
+            $productContent = (string)$this->feedItem->content;
         }
 
         $productName      = is_null($title) ? $this->feedItem->title : $title;
@@ -37,7 +41,6 @@ trait WooCommerceProcessor
         }
         $product       = new WC_Product_Simple();
         $productPrice  = $this->feedItem->getMeta('product_price', 0);
-        $productStatus = $this->convertPostStatus($this->feedItem->getMeta('status', 'publish'));
 
         $product->set_name($productName);
         $product->set_description((string)$productContent);
