@@ -1,6 +1,9 @@
 <?php
 namespace Puleeno\Rake\WordPress\Traits;
 
+use Puleeno\Rake\WordPress\SeoImporter;
+use Ramphor\Rake\Facades\Logger;
+
 trait WordPressProcessor
 {
     public function checkIsExists($postTitle, $originalId = null, $postType = 'post')
@@ -145,5 +148,26 @@ trait WordPressProcessor
 
     public function importPostCategories($categories, $isNested = false)
     {
+    }
+
+    public function importSeo($postId = null)
+    {
+        if (is_null($postId)) {
+            if (empty($this->importedId)) {
+                Logger::warning('Need post ID to import SEO metadata');
+                return;
+            }
+            $postId = $this->importedId;
+        }
+        $importer = SeoImporter::instance();
+        
+        $seoTitle = $this->feedItem->getMeta('seo_title', null);
+        if (!empty($seoTitle)) {
+            $importer->importTitle($postId, $seoTitle);
+        }
+        $seoDescription = $this->feedItem->getMeta('seo_description', null);
+        if (!empty($seoDescription)) {
+            $importer->importDescription($postId, $seoDescription);
+        }
     }
 }
