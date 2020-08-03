@@ -60,7 +60,7 @@ trait WordPressTooth
             if ($stream instanceof StreamInterface && $stream->isWritable()) {
                 fwrite($tempFile, $stream);
             } else {
-                throw new \Exception("data is not file or is not writeable");
+                throw new Exception("data is not file or is not writeable");
             }
 
             $meta           = stream_get_meta_data($tempFile);
@@ -69,8 +69,8 @@ trait WordPressTooth
             $newGuid        = null;
             $existsResource = Resources::getFromHash($hashFile, $newType);
             if (is_null($existsResource)) {
-                $file_array     = array(
-                    'name' => $this->generateFileName($resource->guid, $meta['uri']),
+                $file_array = array(
+                    'name'     => $this->generateFileName($resource->guid, $meta['uri']),
                     'tmp_name' => $meta['uri']
                 );
                 $parentResource = Resources::findParent($resource->id);
@@ -79,22 +79,37 @@ trait WordPressTooth
 
                 if (is_wp_error($newGuid)) {
                     // Logging in the catch block
-                    throw new \Exception($newGuid->get_error_message());
+                    throw new Exception($newGuid->get_error_message());
                 }
                 $resource->saveHash($hashFile, $newType, $newGuid);
+                Logger::debug(sprintf(
+                    'The image %s with hash %s is downloaded as %s(#%d)',
+                    $resource->guid,
+                    $hashFile,
+                    $newType,
+                    $newGuid
+                ));
             } else {
                 $newGuid = $existsResource->newGuid;
                 $newType = $existsResource->newType;
+
+                Logger::info(sprintf(
+                    'The image hash %s of URL %s is already exists as %s(#%d)',
+                    $hashFile,
+                    $resource->guid,
+                    $existsResource->newType,
+                    $existsResource->newGuid
+                ));
             }
 
             $resource->setNewType($newType);
             $resource->setNewGuid($newGuid);
             $resource->imported();
         } catch (Exception $e) {
-            Logger::error($e->getMessage(), [
+            Logger::warning($e->getMessage(), [
                 'resource_id' => $resource->id,
-                'guid' => $resource->guid,
-                'type' => $resource->type,
+                'guid'        => $resource->guid,
+                'type'        => $resource->type,
             ]);
         } finally {
             // Close temporary handle
