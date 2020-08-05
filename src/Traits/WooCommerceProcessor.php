@@ -96,8 +96,8 @@ trait WooCommerceProcessor
 
         $termIds  = [];
         $parentId = 0;
-        if (is_array($categories)) {
-            foreach ($categories as $category) {
+        if (is_array($productCategories)) {
+            foreach ($productCategories as $category) {
                 $category = trim($category);
                 $termId   = term_exists($category, 'product_cat', $parentId);
                 if ($termId> 0) {
