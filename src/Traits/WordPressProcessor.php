@@ -165,8 +165,9 @@ trait WordPressProcessor
         if (is_array($categories)) {
             foreach ($categories as $category) {
                 $category = trim($category);
-                $termId = term_exists($category, 'category', $parentId);
-                if ($termId> 0) {
+                $term     = term_exists($category, 'category', $parentId);
+                if (!is_null($term)) {
+                    $termId    = (int)$term['term_id'];
                     $termIds[] = $termId;
                     if ($isNested) {
                         if ($parentId > 0) {
@@ -189,9 +190,11 @@ trait WordPressProcessor
                 if (is_wp_error($termId)) {
                     continue;
                 }
-                $termIds[] = $term['term_id'];
+
+                $termId    = (int)$term['term_id'];
+                $termIds[] = $termId;
                 if ($isNested) {
-                    $parentId = $term['term_id'];
+                    $parentId = $termId;
                 }
             }
         }

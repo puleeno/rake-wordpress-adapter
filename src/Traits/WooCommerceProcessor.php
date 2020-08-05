@@ -99,8 +99,9 @@ trait WooCommerceProcessor
         if (is_array($productCategories)) {
             foreach ($productCategories as $category) {
                 $category = trim($category);
-                $termId   = term_exists($category, 'product_cat', $parentId);
-                if ($termId> 0) {
+                $term     = term_exists($category, 'product_cat', $parentId);
+                if (!is_null($term)) {
+                    $termId    = (int)$term['term_id'];
                     $termIds[] = $termId;
                     if ($isNested) {
                         if ($parentId > 0) {
@@ -124,9 +125,11 @@ trait WooCommerceProcessor
                 if (is_wp_error($termId)) {
                     continue;
                 }
-                $termIds[] = $term['term_id'];
+
+                $termId    = (int)$term['term_id'];
+                $termIds[] = $termId;
                 if ($isNested) {
-                    $parentId = $term['term_id'];
+                    $parentId = $termId;
                 }
             }
         }
