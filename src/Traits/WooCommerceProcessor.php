@@ -148,16 +148,16 @@ trait WooCommerceProcessor
         return wp_set_object_terms($productId, $termIds, 'product_cat', $this->appendProductCategories);
     }
 
-    public function importProductTags($productTags)
+    public function importProductTags($productTags, $productId = null)
     {
-        if (is_null($postId)) {
+        if (is_null($productId)) {
             if (empty($this->importedId)) {
                 Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
                 return;
             }
-            $postId = $this->importedId;
+            $productId = $this->importedId;
         }
-        return wp_set_object_terms($postId, $productTags, 'product_tag', $this->appendProductTags);
+        return wp_set_object_terms($productId, $productTags, 'product_tag', $this->appendProductTags);
     }
 
     public function importProductSku($sku)
