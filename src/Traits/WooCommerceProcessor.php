@@ -40,7 +40,7 @@ trait WooCommerceProcessor
             return $this->importedId;
         }
 
-        $product       = new WC_Product_Simple();
+        $product       = $this->createProduct();
         $productPrice  = $this->feedItem->getMeta('product_price', 0);
 
         $product->set_name($productName);
@@ -89,11 +89,24 @@ trait WooCommerceProcessor
      * @link https://github.com/woocommerce/woocommerce/wiki/Product-Data-Schema
      * @return void
      */
-    public function setProductType($productType)
+    public function createProduct($productType = null)
     {
+        return new WC_Product_Simple();
     }
 
     public function importProductCategories($productCategories, $isNested = false)
+    {
+    }
+
+    public function importProductTags($productTags)
+    {
+    }
+
+    public function importProductSku($sku)
+    {
+    }
+
+    public function importStockStatus($status)
     {
     }
 }
