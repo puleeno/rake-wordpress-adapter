@@ -6,6 +6,9 @@ use Ramphor\Rake\Facades\Logger;
 
 trait WordPressProcessor
 {
+    protected $appendPostCategories = false;
+    protected $appendPostTags = false;
+
     public function checkIsExists($postTitle, $originalId = null, $postType = 'post')
     {
         global $wpdb;
@@ -147,8 +150,65 @@ trait WordPressProcessor
         return $wpError;
     }
 
-    public function importPostCategories($categories, $isNested = false)
+    public function importPostCategories($categories, $isNested = false, $postId = null)
     {
+        if (is_null($postId)) {
+            if (empty($this->importedId)) {
+                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
+                return;
+            }
+            $postId = $this->importedId;
+        }
+
+        $termIds = [];
+        $parentId = 0;
+        if (is_array($categories)) {
+            foreach ($categories as $category) {
+                $category = trim($category);
+                $termId = term_exists($category, 'category', $parentId);
+                if ($termId> 0) {
+                    $termIds[] = $termId;
+                    if ($isNested) {
+                        if ($parentId > 0) {
+                            if ($parentId > 0) {
+                                wp_update_term($termId, 'category', [
+                                    'parent' => $parentId
+                                ]);
+                            }
+                        }
+                        $parentId = $termId;
+                    }
+                    continue;
+                }
+
+                $categoryArgs = [];
+                if ($isNested && $parentId > 0) {
+                    $categoryArgs['parent'] = $parentId;
+                }
+                $term = wp_insert_term($category, 'category', $categoryArgs);
+                if (is_wp_error($termId)) {
+                    continue;
+                }
+                $termIds[] = $term['term_id'];
+                if ($isNested) {
+                    $parentId = $term['term_id'];
+                }
+            }
+        }
+
+        return wp_set_post_categories($postId, $termIds, $this->appendPostCategories);
+    }
+
+    public function importPostTags($tags, $postId = null)
+    {
+        if (is_null($postId)) {
+            if (empty($this->importedId)) {
+                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
+                return;
+            }
+            $postId = $this->importedId;
+        }
+        return wp_set_post_tags($postId, $tags, $this->appendPostTags);
     }
 
     public function importSeo($postId = null)
