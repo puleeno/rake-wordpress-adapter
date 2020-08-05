@@ -3,6 +3,9 @@ namespace Puleeno\Rake\WordPress\Traits;
 
 use WC_Product;
 use WC_Product_Simple;
+use WC_Product_Attribute;
+use wc_create_attribute;
+use taxonomy_exists;
 use Ramphor\Rake\Facades\Logger;
 
 trait WooCommerceProcessor
@@ -143,12 +146,26 @@ trait WooCommerceProcessor
         return wp_set_object_terms($productId, $productTags, 'product_tag', $this->appendProductTags);
     }
 
+    protected function createProductAttribute($name, $taxonomy)
+    {
+        $args = array(
+            'name'         => $name,
+            'slug'         => $taxonomy,
+            'type'         => 'select',
+            'order_by'     => 'menu_order',
+            'has_archives' => false,
+        );
+        return wc_create_attribute($args);
+    }
+
     /**
      * Create product attributes for WooCommerce product
      *
      * @param array $productAttributes List product attributes with values
+     *
+     * @link https://stackoverflow.com/questions/53944532/auto-set-specific-attribute-term-value-to-purchased-products-on-woocommerce
      */
-    public function importAttributes($productAttributes, $productId = null)
+    public function importProductAttributes($productAttributes, $productId = null)
     {
         if (is_null($productId)) {
             if (empty($this->importedId)) {
@@ -157,7 +174,61 @@ trait WooCommerceProcessor
             }
             $productId = $this->importedId;
         }
-        $product->set_attributes($productAttributes);
+        $product = wc_get_product($productId);
+        if (is_null($product)) {
+            Logger::warning(sprintf('The product #%d is not exists to import attributes'));
+            return;
+        }
+        $attributes = (array)$product->get_attributes();
+        $attributeTerms = array();
+        foreach ($productAttributes as $attribute => $attributeValue) {
+            $attributeType    = is_array($attributeValue) ? 'select' : 'custom';
+            $productAttribute = ($attributeType === 'select') ? sprintf('pa_%s', $attribute) : wc_sanitize_taxonomy_name($attribute);
+            $attributeName    = ($attributeType === 'select') ? $attributeValue['name'] : $attribute;
+            $attributeValue   = ($attributeType === 'select') ? $attributeValue['value'] : $attributeValue;
+
+            $wcAttribute = isset($attributes[$productAttribute]) ? $attributes[$productAttribute] : new WC_Product_Attribute();
+            if ($attributeType === 'select') {
+                if (!taxonomy_exists($productAttribute)) {
+                    $attributeId = $this->createProductAttribute($attributeName, $productAttribute);
+                    $wcAttribute->set_id($attributeId);
+                }
+                $term = get_term_by('name', $attributeValue, $productAttribute);
+                if (is_null($term)) {
+                    $term = wp_insert_term($attributeValue, $productAttribute);
+                }
+                if (is_wp_error($term) || empty($term)) {
+                    Logger::warning(sprintf(
+                        'The %s attribute(%s) has value %s insert is failed',
+                        $attributeName,
+                        $productAttribute,
+                        $attributeValue
+                    ));
+                    continue;
+                }
+                $options = (array)$wcAttribute->get_options();
+                $options[] = $term->term_id;
+
+                $wcAttribute->set_options($options);
+                $wcAttribute->set_visible(true);
+                $wcAttribute->set_variation(false);
+                if (!isset($attributes[$productAttribute])) {
+                    $wcAttribute->set_position(sizeof($attributes) + 1);
+                }
+            } else { // Custom attributes
+                $wcAttribute->set_id(0);
+                $wcAttribute->set_name($attributeName);
+                $wcAttribute->set_options($attributeValue);
+                $wcAttribute->set_visible(true);
+                $wcAttribute->set_variation(false);
+                if (!isset($attributes[$productAttribute])) {
+                    $wcAttribute->set_position(sizeof($attributes) + 1);
+                }
+            }
+        }
+
+        $product->set_attributes($attributes);
+        $product->save();
     }
 
     public function importProductSku($sku, $productId = null)
@@ -169,6 +240,13 @@ trait WooCommerceProcessor
             }
             $productId = $this->importedId;
         }
+        $product = wc_get_product($productId);
+        if (is_null($product)) {
+            Logger::warning(sprintf('The product #%d is not exists to import SKU'));
+            return;
+        }
+        $product->set_sku($sku);
+        $product->save();
     }
 
     public function importStockStatus($status, $productId = null)
@@ -180,5 +258,13 @@ trait WooCommerceProcessor
             }
             $productId = $this->importedId;
         }
+
+        $product = wc_get_product($productId);
+        if (is_null($product)) {
+            Logger::warning(sprintf('The product #%d is not exists to import SKU'));
+            return;
+        }
+        $product->set_stock_status($status);
+        $product->save();
     }
 }
