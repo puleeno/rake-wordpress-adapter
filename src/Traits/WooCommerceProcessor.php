@@ -44,7 +44,9 @@ trait WooCommerceProcessor
         $productPrice  = $this->feedItem->getMeta('product_price', 0);
 
         $product->set_name($productName);
-        $product->set_description((string)$productContent);
+        $product->set_description(
+            $this->cleanupContentBeforeImport($productContent)
+        );
         $product->set_regular_price($productPrice);
 
         $this->importedId = $product->save();

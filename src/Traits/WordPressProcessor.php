@@ -87,11 +87,11 @@ trait WordPressProcessor
 
         $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
         $this->importedId = wp_insert_post([
-            'post_type' => 'post',
-            'post_title' => $this->feedItem->title,
-            'post_content' => $postContent,
-            'post_status' => $postStatus,
-            'post_author' => $this->getAuthor(),
+            'post_type'    => 'post',
+            'post_title'   => $this->feedItem->title,
+            'post_content' => $this->cleanupContentBeforeImport($postContent),
+            'post_status'  => $postStatus,
+            'post_author'  => $this->getAuthor(),
         ], $wpError);
 
         if ($this->importedId > 0) {
@@ -134,11 +134,11 @@ trait WordPressProcessor
 
         $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
         $this->importedId = wp_insert_post([
-            'post_type' => 'page',
-            'post_title' => $this->feedItem->title,
-            'post_content' => $pageContent,
-            'post_status' => $postStatus,
-            'post_author' => $this->getAuthor(),
+            'post_type'    => 'page',
+            'post_title'   => $this->feedItem->title,
+            'post_content' => $this->cleanupContentBeforeImport($pageContent),
+            'post_status'  => $postStatus,
+            'post_author'  => $this->getAuthor(),
         ], $wpError);
 
         if ($this->importedId > 0) {
