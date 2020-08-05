@@ -163,7 +163,7 @@ trait WordPressTooth
         $postType = $parent->newType;
         $post     = get_post($postId);
         if (is_null($post)) {
-            Loggerr::warning(sprintf('The post has ID %d is not found', $postId), [
+            Logger::warning(sprintf('The post has ID %d is not found', $postId), [
                 'post_id' => $parent->newGuid,
                 'post_type' => $parent->newType,
             ]);

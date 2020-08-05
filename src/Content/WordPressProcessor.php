@@ -78,7 +78,7 @@ abstract class WordPressProcessor extends Processor
                     implode(', ', $images),
                 ));
 
-                Loggerr::debug(sprintf(
+                Logger::debug(sprintf(
                     'Convert HTML gallery %s to WordPress gallery %s',
                     $gallery->innertHtml,
                     $gallery_shortcode->innerHtml
