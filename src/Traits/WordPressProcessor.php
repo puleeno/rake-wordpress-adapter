@@ -107,15 +107,16 @@ trait WordPressProcessor
 
     public function importPage($pageContent = null)
     {
-        if (!is_null($postContent)) {
-            $postContent = (string)$this->feedItem->content;
+        if (is_null($pageContent)) {
+            $pageContent = (string)$this->feedItem->content;
         } else {
-            $postContent = (string)$postContent;
+            $pageContent = (string)$pageContent;
             $this->feedItem->setProperty(
                 'content',
-                $postContent
+                $pageContent
             );
         }
+
         $originalId       = $this->feedItem->getMeta('original_id', null);
         $this->importedId = $this->checkIsExists(
             $this->feedItem->title,
@@ -135,7 +136,7 @@ trait WordPressProcessor
         $this->importedId = wp_insert_post([
             'post_type' => 'page',
             'post_title' => $this->feedItem->title,
-            'post_content' => $postContent,
+            'post_content' => $pageContent,
             'post_status' => $postStatus,
             'post_author' => $this->getAuthor(),
         ], $wpError);
