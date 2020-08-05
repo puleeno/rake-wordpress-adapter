@@ -160,7 +160,7 @@ trait WordPressProcessor
             $postId = $this->importedId;
         }
 
-        $termIds = [];
+        $termIds  = [];
         $parentId = 0;
         if (is_array($categories)) {
             foreach ($categories as $category) {
