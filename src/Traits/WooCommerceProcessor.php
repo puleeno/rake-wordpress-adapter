@@ -8,6 +8,8 @@ use Ramphor\Rake\Facades\Logger;
 trait WooCommerceProcessor
 {
     protected $importedId;
+    protected $appendProductCategories = false;
+    protected $appendProductTags = false;
 
     /**
      * Import product from feed item
@@ -96,12 +98,66 @@ trait WooCommerceProcessor
         return new WC_Product_Simple();
     }
 
-    public function importProductCategories($productCategories, $isNested = false)
+    public function importProductCategories($productCategories, $isNested = false, $productId)
     {
+        if (is_null($productId)) {
+            if (empty($this->importedId)) {
+                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
+                return;
+            }
+            $productId = $this->importedId;
+        }
+
+        $termIds  = [];
+        $parentId = 0;
+        if (is_array($categories)) {
+            foreach ($categories as $category) {
+                $category = trim($category);
+                $termId   = term_exists($category, 'product_cat', $parentId);
+                if ($termId> 0) {
+                    $termIds[] = $termId;
+                    if ($isNested) {
+                        if ($parentId > 0) {
+                            if ($parentId > 0) {
+                                wp_update_term($termId, 'product_cat', [
+                                    'parent' => $parentId
+                                ]);
+                            }
+                        }
+                        $parentId = $termId;
+                    }
+                    continue;
+                }
+
+                $categoryArgs = [];
+                if ($isNested && $parentId > 0) {
+                    $categoryArgs['parent'] = $parentId;
+                }
+
+                $term = wp_insert_term($category, 'product_cat', $categoryArgs);
+                if (is_wp_error($termId)) {
+                    continue;
+                }
+                $termIds[] = $term['term_id'];
+                if ($isNested) {
+                    $parentId = $term['term_id'];
+                }
+            }
+        }
+
+        return wp_set_object_terms($productId, $termIds, 'product_cat', $this->appendProductCategories);
     }
 
     public function importProductTags($productTags)
     {
+        if (is_null($postId)) {
+            if (empty($this->importedId)) {
+                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
+                return;
+            }
+            $postId = $this->importedId;
+        }
+        return wp_set_object_terms($postId, $productTags, 'product_tag', $this->appendProductTags);
     }
 
     public function importProductSku($sku)
