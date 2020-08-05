@@ -64,14 +64,14 @@ trait WooCommerceProcessor
      *
      * @param array $productAttributes List product attributes with values
      */
-    public function importAttributes(&$product, $productAttributes)
+    public function importAttributes($productAttributes, $productId = null)
     {
-        if (!$product instanceof WC_Product) {
-            Logger::warning(sprintf(
-                'The product must be an instance of %s to import attributes',
-                WC_Product::class
-            ));
-            return;
+        if (is_null($productId)) {
+            if (empty($this->importedId)) {
+                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
+                return;
+            }
+            $productId = $this->importedId;
         }
         $product->set_attributes($productAttributes);
     }
