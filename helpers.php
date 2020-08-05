@@ -29,7 +29,10 @@ function fetch_extension_mime_types()
         @fwrite($h, $body);
         @fclose($h);
     } catch (\Exception $e) {
-        Logger::error($e->getMessage());
+        ob_start();
+        debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        $errorLogs = ob_get_clean();
+        Logger::warning(sprintf('%s\n%s', $e->getMessage(), $errorLogs));
     }
 
     return $mimes;

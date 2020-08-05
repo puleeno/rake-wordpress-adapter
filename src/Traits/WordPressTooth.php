@@ -106,7 +106,10 @@ trait WordPressTooth
             $resource->setNewGuid($newGuid);
             $resource->imported();
         } catch (Exception $e) {
-            Logger::warning($e->getMessage(), [
+            ob_start();
+            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+            $errorLogs = ob_get_clean();
+            Logger::warning(sprintf('%s\n%s', $e->getMessage(), $errorLogs), [
                 'resource_id' => $resource->id,
                 'guid'        => $resource->guid,
                 'type'        => $resource->type,
