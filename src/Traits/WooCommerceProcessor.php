@@ -60,23 +60,6 @@ trait WooCommerceProcessor
     }
 
     /**
-     * Create product attributes for WooCommerce product
-     *
-     * @param array $productAttributes List product attributes with values
-     */
-    public function importAttributes($productAttributes, $productId = null)
-    {
-        if (is_null($productId)) {
-            if (empty($this->importedId)) {
-                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
-                return;
-            }
-            $productId = $this->importedId;
-        }
-        $product->set_attributes($productAttributes);
-    }
-
-    /**
      * With attributes and categories set up and stock management configured, we can begin adding products. When adding a product, the first thing to decide is what type of product it is.
      *
      * Simple – covers the vast majority of any products you may sell. Simple products are shipped and have no options.
@@ -158,6 +141,23 @@ trait WooCommerceProcessor
             $productId = $this->importedId;
         }
         return wp_set_object_terms($productId, $productTags, 'product_tag', $this->appendProductTags);
+    }
+
+    /**
+     * Create product attributes for WooCommerce product
+     *
+     * @param array $productAttributes List product attributes with values
+     */
+    public function importAttributes($productAttributes, $productId = null)
+    {
+        if (is_null($productId)) {
+            if (empty($this->importedId)) {
+                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
+                return;
+            }
+            $productId = $this->importedId;
+        }
+        $product->set_attributes($productAttributes);
     }
 
     public function importProductSku($sku, $productId = null)
