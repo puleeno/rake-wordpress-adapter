@@ -23,13 +23,13 @@ trait WooCommerceProcessor
             return new WP_Error('rake_import', 'The WooCommerce product is not registed in your system');
         }
         if (is_null($productContent)) {
+            $productContent = (string)$this->feedItem->content;
+        } else {
             $productContent = (string)$productContent;
             $this->feedItem->setProperty(
                 'content',
                 $productContent
             );
-        } else {
-            $productContent = (string)$this->feedItem->content;
         }
 
         $productName      = is_null($title) ? $this->feedItem->title : $title;

@@ -67,13 +67,13 @@ trait WordPressProcessor
     public function importPost($postContent = null)
     {
         if (is_null($postContent)) {
+            $postContent = (string)$this->feedItem->content;
+        } else {
             $postContent = (string)$postContent;
             $this->feedItem->setProperty(
                 'content',
                 $postContent
             );
-        } else {
-            $postContent = (string)$this->feedItem->content;
         }
         $originalId       = $this->feedItem->getMeta('original_id', null);
         $this->importedId = $this->checkIsExists(
@@ -107,14 +107,14 @@ trait WordPressProcessor
 
     public function importPage($pageContent = null)
     {
-        if (is_null($postContent)) {
+        if (!is_null($postContent)) {
+            $postContent = (string)$this->feedItem->content;
+        } else {
             $postContent = (string)$postContent;
             $this->feedItem->setProperty(
                 'content',
                 $postContent
             );
-        } else {
-            $postContent = (string)$this->feedItem->content;
         }
         $originalId       = $this->feedItem->getMeta('original_id', null);
         $this->importedId = $this->checkIsExists(
@@ -160,7 +160,7 @@ trait WordPressProcessor
             $postId = $this->importedId;
         }
         $importer = SeoImporter::instance();
-        
+
         $seoTitle = $this->feedItem->getMeta('seo_title', null);
         if (!empty($seoTitle)) {
             $importer->importTitle($postId, $seoTitle);
