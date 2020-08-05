@@ -188,6 +188,8 @@ trait WooCommerceProcessor
             $attributeValue   = ($attributeType === 'select') ? $attributeValue['value'] : $attributeValue;
 
             $wcAttribute = isset($attributes[$productAttribute]) ? $attributes[$productAttribute] : new WC_Product_Attribute();
+
+
             if ($attributeType === 'select') {
                 if (!taxonomy_exists($productAttribute)) {
                     $attributeId = $this->createProductAttribute($attributeName, $productAttribute);
@@ -215,15 +217,20 @@ trait WooCommerceProcessor
                 if (!isset($attributes[$productAttribute])) {
                     $wcAttribute->set_position(sizeof($attributes) + 1);
                 }
+                $attributes[$productAttribute] = $wcAttribute;
             } else { // Custom attributes
                 $wcAttribute->set_id(0);
                 $wcAttribute->set_name($attributeName);
-                $wcAttribute->set_options($attributeValue);
+                $wcAttribute->set_options(explode(
+                    WC_DELIMITER,
+                    $attributeValue
+                ));
                 $wcAttribute->set_visible(true);
                 $wcAttribute->set_variation(false);
                 if (!isset($attributes[$productAttribute])) {
                     $wcAttribute->set_position(sizeof($attributes) + 1);
                 }
+                $attributes[$productAttribute] = $wcAttribute;
             }
         }
 
