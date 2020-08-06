@@ -1,5 +1,5 @@
 <?php
-use Ramphor\Rake\Facades\Client;
+use Ramphor\Rake\Facades\Request;
 use Ramphor\Rake\Facades\Logger;
 
 /**
@@ -20,7 +20,7 @@ function fetch_extension_mime_types()
     $mimes  = [];
     $source = 'https://gist.githubusercontent.com/AshHeskes/6038140/raw/file-extension-to-mime-types.json';
     try {
-        $response = Client::request('GET', $source);
+        $response = Request::sendRequest('GET', $source);
         $body     = $response->getBody();
         $mimes    = json_decode($body, true);
 

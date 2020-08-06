@@ -7,7 +7,7 @@ use Psr\Http\Message\StreamInterface;
 use Http\Client\Exception as HttpException;
 use GuzzleHttp\Exception\RequestException;
 use Ramphor\Rake\Resource;
-use Ramphor\Rake\Facades\Client;
+use Ramphor\Rake\Facades\Request;
 use Ramphor\Rake\Facades\Logger;
 use Ramphor\Rake\Facades\Resources;
 use PHPHtmlParser\Dom as Document;
@@ -57,7 +57,7 @@ trait WordPressTooth
         $this->requireWordPressSupports();
 
         try {
-            $response   = Client::request('GET', $resource->guid);
+            $response   = Request::sendRequest('GET', $resource->guid);
             $stream     = $response->getBody();
             $tempFile   = tmpfile();
             if ($stream instanceof StreamInterface && $stream->isWritable()) {
