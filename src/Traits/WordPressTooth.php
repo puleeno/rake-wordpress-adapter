@@ -4,6 +4,8 @@ namespace Puleeno\Rake\WordPress\Traits;
 use Error;
 use Exception;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Client\RequestExceptionInterface;
+use GuzzleHttp\Exception\RequestException;
 use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Client;
 use Ramphor\Rake\Facades\Logger;
@@ -105,7 +107,7 @@ trait WordPressTooth
             $resource->setNewType($newType);
             $resource->setNewGuid($newGuid);
             $resource->imported();
-        } catch (Exception | Error $e) {
+        } catch (RequestExceptionInterface | Exception | Error $e) {
             ob_start();
             debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
             $errorLogs = ob_get_clean();
@@ -114,6 +116,18 @@ trait WordPressTooth
                 'guid'        => $resource->guid,
                 'type'        => $resource->type,
             ]);
+            if ($e instanceof RequestExceptionInterface) {
+                if ($e instanceof RequestException) {
+                    if ($e->hasResponse()) {
+                        $response = $e->getResponse();
+                        if ($response->getStatusCode() < 500) {
+                            $resource->skip();
+                        }
+                    }
+                } else {
+                    $resource->skip();
+                }
+            }
         } finally {
             // Close temporary handle
             @fclose($tempFile);
