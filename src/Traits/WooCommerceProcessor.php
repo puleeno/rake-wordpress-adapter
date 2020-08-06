@@ -4,6 +4,7 @@ namespace Puleeno\Rake\WordPress\Traits;
 use WC_Product;
 use WC_Product_Simple;
 use WC_Product_Attribute;
+use WC_Data_Exception;
 use wc_create_attribute;
 use taxonomy_exists;
 use Ramphor\Rake\Facades\Logger;
@@ -255,8 +256,27 @@ trait WooCommerceProcessor
             Logger::warning(sprintf('The product #%d is not exists to import SKU'));
             return;
         }
-        $product->set_sku($sku);
-        $product->save();
+        try {
+            $product->set_sku($sku);
+            $product->save();
+        } catch (WC_Data_Exception $e) {
+            ob_start();
+            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+            $errorLogs = ob_get_clean();
+            Logger::error(
+                sprintf(
+                    '%s(SKU: %s - Product #%d)\n%s',
+                    $e->getMessage(),
+                    $sku,
+                    $productId,
+                    $errorLogs
+                ),
+                [
+                    'SKU' => $sku,
+                    'productID' => $productId
+                ]
+            );
+        }
     }
 
     public function importStockStatus($status, $productId = null)
