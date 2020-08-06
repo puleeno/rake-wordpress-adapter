@@ -16,7 +16,8 @@ use function media_handle_sideload;
 
 trait WordPressTooth
 {
-    protected $resourceType = 'attachment';
+    protected $resourceType                  = 'attachment';
+    protected $maxRetryDownloadResourceTimes = 10;
 
     protected function requireWordPressSupports()
     {
@@ -124,7 +125,8 @@ trait WordPressTooth
                             $resource->skip();
                         }
                     }
-                } else {
+                }
+                if ($resource->retry >= $this->maxRetryDownloadResourceTimes) {
                     $resource->skip();
                 }
             }
