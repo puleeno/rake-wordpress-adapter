@@ -190,10 +190,10 @@ trait WordPressTooth
         }
 
         try {
-            $document->load($post->post_content);
+            $document->loadStr($post->post_content);
         } catch (Error | Exeption $e) {
             // Override document content with empty string
-            $document->load('');
+            $document->loadStr('');
 
             Logger::warning($e->getMessage(), $post->to_array());
         }

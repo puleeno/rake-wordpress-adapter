@@ -15,7 +15,7 @@ abstract class WordPressProcessor extends Processor
     public function convertHtmlGalleryFromContent()
     {
         $document = new Dom();
-        $document->load($this->feedItem->content);
+        $document->loadStr($this->feedItem->content);
         $gallaryImages  = $this->feedItem->galleryImages;
         $totalGalleries = count($gallaryImages);
 
@@ -93,7 +93,7 @@ abstract class WordPressProcessor extends Processor
     public function convertTableOfContent()
     {
         $document = new Dom();
-        $document->load($this->feedItem->content);
+        $document->loadStr($this->feedItem->content);
 
         foreach ($this->tocPlugins as $tocRule) {
             foreach ($document->find($tocRule) as $toc_container) {
