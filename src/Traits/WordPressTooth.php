@@ -4,7 +4,7 @@ namespace Puleeno\Rake\WordPress\Traits;
 use Error;
 use Exception;
 use Psr\Http\Message\StreamInterface;
-use Psr\Http\Client\RequestExceptionInterface;
+use Http\Client\Exception as HttpException;
 use GuzzleHttp\Exception\RequestException;
 use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Client;
@@ -117,7 +117,7 @@ trait WordPressTooth
                 'guid'        => $resource->guid,
                 'type'        => $resource->type,
             ]);
-            if ($e instanceof RequestExceptionInterface) {
+            if ($e instanceof HttpException) {
                 if ($e instanceof RequestException) {
                     if ($e->hasResponse()) {
                         $response = $e->getResponse();
