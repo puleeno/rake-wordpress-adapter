@@ -171,7 +171,7 @@ trait WooCommerceProcessor
      */
     public function importProductAttributes($productAttributes, $productId = null)
     {
-        if (!is_array($importProductAttributes)) {
+        if (!is_array($productAttributes)) {
             Logger::notice(sprintf('The product attributes is invalid to import %s', var_export($productAttributes, true)));
             return;
         }
