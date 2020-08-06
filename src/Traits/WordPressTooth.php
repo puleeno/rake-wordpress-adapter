@@ -105,7 +105,7 @@ trait WordPressTooth
             $resource->setNewType($newType);
             $resource->setNewGuid($newGuid);
             $resource->imported();
-        } catch (Exception $e) {
+        } catch (Exception | Error $e) {
             ob_start();
             debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
             $errorLogs = ob_get_clean();
