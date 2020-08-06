@@ -171,6 +171,10 @@ trait WooCommerceProcessor
      */
     public function importProductAttributes($productAttributes, $productId = null)
     {
+        if (!is_array($importProductAttributes)) {
+            Logger::notice(sprintf('The product attributes is invalid to import %s', var_export($productAttributes, true)));
+            return;
+        }
         if (is_null($productId)) {
             if (empty($this->importedId)) {
                 Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
