@@ -1,7 +1,7 @@
 <?php
 namespace Puleeno\Rake\WordPress\Traits;
 
-use Error;
+use Throwable;
 use Exception;
 use Psr\Http\Message\StreamInterface;
 use Http\Client\Exception\RequestException;
@@ -177,7 +177,7 @@ trait WordPressTooth
 
         try {
             $document->loadStr($post->post_content);
-        } catch (Error | Exeption $e) {
+        } catch (Throwable $e) {
             // Override document content with empty string
             $document->loadStr('');
 
