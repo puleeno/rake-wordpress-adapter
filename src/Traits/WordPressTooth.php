@@ -4,8 +4,7 @@ namespace Puleeno\Rake\WordPress\Traits;
 use Error;
 use Exception;
 use Psr\Http\Message\StreamInterface;
-use Http\Client\Exception as HttpException;
-use GuzzleHttp\Exception\RequestException;
+use Http\Client\Exception\RequestException;
 use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Request;
 use Ramphor\Rake\Facades\Logger;
@@ -108,27 +107,14 @@ trait WordPressTooth
             $resource->setNewType($newType);
             $resource->setNewGuid($newGuid);
             $resource->imported();
-        } catch (HttpException | Exception | Error $e) {
-            ob_start();
-            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-            $errorLogs = ob_get_clean();
-            Logger::warning(sprintf('%s\n%s', $e->getMessage(), $errorLogs), [
-                'resource_id' => $resource->id,
-                'guid'        => $resource->guid,
-                'type'        => $resource->type,
-            ]);
-            if ($e instanceof HttpException) {
-                if ($e instanceof RequestException) {
-                    if ($e->hasResponse()) {
-                        $response = $e->getResponse();
-                        if ($response->getStatusCode() < 500) {
-                            $resource->skip();
-                        }
-                    }
-                }
-                if ($resource->retry >= $this->maxRetryDownloadResourceTimes) {
+        } catch (RequestException $e) {
+            if (is_callable([$e, 'getResponse'])) {
+                $response = $e->getResponse();
+                if ($response->getStatusCode() < 500) {
                     $resource->skip();
                 }
+            } elseif ($resource->retry >= $this->maxRetryDownloadResourceTimes) {
+                $resource->skip();
             }
         } finally {
             // Close temporary handle
