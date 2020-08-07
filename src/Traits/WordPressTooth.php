@@ -1,7 +1,7 @@
 <?php
 namespace Puleeno\Rake\WordPress\Traits;
 
-use Throwable;
+use \Throwable;
 use Exception;
 use Psr\Http\Message\StreamInterface;
 use Http\Client\Exception\RequestException;
