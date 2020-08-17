@@ -9,6 +9,14 @@ trait WordPressProcessor
     protected $appendPostCategories = false;
     protected $appendPostTags = false;
 
+    /**
+     * Check the post data is exists with post title and original ID
+     *
+     * @param string $postTitle
+     * @param mixed $originalId
+     * @param string $postType
+     * @return int The WordPress post ID if it already exists.
+     */
     public function checkIsExists($postTitle, $originalId = null, $postType = 'post')
     {
         global $wpdb;
@@ -36,7 +44,11 @@ trait WordPressProcessor
                 '_original_id',
                 $originalId
             );
-        return $wpdb->get_var($sql);
+
+        $exists = $wpdb->get_var($sql);
+        Logger::debug(sprintf('Check %s has title %s is exists: %s', $postType, $postTitle, $exists));
+
+        return (int)$exists;
     }
 
     public function convertPostStatus($postStatus)
@@ -89,13 +101,15 @@ trait WordPressProcessor
         }
 
         $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
-        $this->importedId = wp_insert_post([
+        $postArr    = array(
             'post_type'    => 'post',
             'post_title'   => $this->feedItem->title,
             'post_content' => $this->cleanupContentBeforeImport($postContent),
             'post_status'  => $postStatus,
             'post_author'  => $this->getAuthor(),
-        ], $wpError);
+        );
+        Logger::debug('Insert new page ' . $postArr['post_title'], $postArr);
+        $this->importedId = wp_insert_post($postArr, $wpError);
 
         if ($this->importedId > 0) {
             update_post_meta(
@@ -136,14 +150,16 @@ trait WordPressProcessor
         }
 
         $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
-        $this->importedId = wp_insert_post([
+        $postArr    = array(
             'post_type'    => 'page',
             'post_title'   => $this->feedItem->title,
             'post_content' => $this->cleanupContentBeforeImport($pageContent),
             'post_status'  => $postStatus,
             'post_author'  => $this->getAuthor(),
-        ], $wpError);
+        );
 
+        Logger::debug('Insert new page ' . $postArr['post_title'], $postArr);
+        $this->importedId = wp_insert_post($postArr, $wpError);
         if ($this->importedId > 0) {
             return $this->importedId;
         }
