@@ -179,6 +179,9 @@ trait WordPressProcessor
         $termIds  = [];
         $parentId = 0;
         if (is_array($categories)) {
+            // Remove the categories with empty names;
+            $categories = array_filter($categories);
+
             foreach ($categories as $category) {
                 $category = trim($category);
                 $term     = term_exists($category, 'category', $parentId);
@@ -206,7 +209,7 @@ trait WordPressProcessor
                 Logger::debug(sprintf('Insert new post category: %s', $category), $categoryArgs);
                 $term = wp_insert_term($category, 'category', $categoryArgs);
                 if (is_wp_error($term)) {
-                    Logger::warning($term->get_error_message());
+                    Logger::warning($term->get_error_message(), $categoryArgs);
                     continue;
                 }
 

@@ -98,6 +98,9 @@ trait WooCommerceProcessor
         $termIds  = [];
         $parentId = 0;
         if (is_array($productCategories)) {
+            // Remove the categories with empty names;
+            $categories = array_filter($categories);
+
             foreach ($productCategories as $category) {
                 $category = trim($category);
                 $term     = term_exists($category, 'product_cat', $parentId);
@@ -125,7 +128,7 @@ trait WooCommerceProcessor
                 Logger::debug(sprintf('Insert new product category: %s', $category), $categoryArgs);
                 $term = wp_insert_term($category, 'product_cat', $categoryArgs);
                 if (is_wp_error($term)) {
-                    Logger::warning($term->get_error_message());
+                    Logger::warning($term->get_error_message(), $categoryArgs);
                     continue;
                 }
 
