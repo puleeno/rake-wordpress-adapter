@@ -46,7 +46,7 @@ trait WordPressProcessor
             );
 
         $exists = $wpdb->get_var($sql);
-        Logger::debug(sprintf('Check %s has title %s is exists: %s', $postType, $postTitle, $exists));
+        Logger::debug(sprintf('Check %s has title "%s" is exists: %s', $postType, $postTitle, $exists));
 
         return (int)$exists;
     }
@@ -108,7 +108,7 @@ trait WordPressProcessor
             'post_status'  => $postStatus,
             'post_author'  => $this->getAuthor(),
         );
-        Logger::debug('Insert new page ' . $postArr['post_title'], $postArr);
+        Logger::debug('Insert new post ' . $postArr['post_title'], $postArr);
         $this->importedId = wp_insert_post($postArr, $wpError);
 
         if ($this->importedId > 0) {
@@ -202,8 +202,11 @@ trait WordPressProcessor
                 if ($isNested && $parentId > 0) {
                     $categoryArgs['parent'] = $parentId;
                 }
+
+                Logger::debug(sprintf('Insert new post category: %s', $category), $categoryArgs);
                 $term = wp_insert_term($category, 'category', $categoryArgs);
-                if (is_wp_error($termId)) {
+                if (is_wp_error($term)) {
+                    Logger::warning($term->get_error_message());
                     continue;
                 }
 
