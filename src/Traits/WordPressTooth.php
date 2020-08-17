@@ -54,7 +54,7 @@ trait WordPressTooth
     public function downloadResource(Resource &$resource): Resource
     {
         $this->requireWordPressSupports();
-
+        Logger::debug(sprintf('Download the %s resource: %s', $resource->type, $resource->guid));
         try {
             $response   = Request::sendRequest('GET', $resource->guid);
             $stream     = $response->getBody();
@@ -108,6 +108,7 @@ trait WordPressTooth
             $resource->setNewGuid($newGuid);
             $resource->imported();
         } catch (RequestException $e) {
+            Logger::warning($e->getMessage(), (array)$resource);
             if (is_callable([$e, 'getResponse'])) {
                 $response = $e->getResponse();
                 if ($response->getStatusCode() < 500) {
