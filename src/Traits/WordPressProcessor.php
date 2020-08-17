@@ -97,6 +97,7 @@ trait WordPressProcessor
             'post'
         );
         if ($this->importedId > 0) {
+            Logger::debug(sprintf('Found the post %d so the process will continue with next step', $this->importedId));
             return $this->importedId;
         }
 
