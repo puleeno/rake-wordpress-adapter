@@ -107,9 +107,9 @@ trait WordPressTooth
             $resource->setNewType($newType);
             $resource->setNewGuid($newGuid);
             $resource->imported();
-        } catch (RequestException $e) {
-            Logger::warning($e->getMessage(), (array)$resource);
-            if (is_callable([$e, 'getResponse'])) {
+        } catch (Throwable $e) {
+            Logger::warning(sprintf("%s\n%s", $e->getMessage(), var_export($meta, true)), (array)$resource);
+            if ($e instanceof RequestException && is_callable([$e, 'getResponse'])) {
                 $response = $e->getResponse();
                 if ($response->getStatusCode() < 500) {
                     $resource->skip();
