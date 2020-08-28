@@ -109,6 +109,21 @@ trait WordPressProcessor
             'post_status'  => $postStatus,
             'post_author'  => $this->getAuthor(),
         );
+
+        if ($this->feedItem->publishedAt) {
+            $postArr['post_date'] = $this->feedItem->publishedAt;
+        } elseif ($this->feedItem->createdAt) {
+            $postArr['post_date'] = $this->feedItem->createdAt;
+        }
+
+        if ($this->feedItem->updatedAt) {
+            $postArr['post_modified'] = $this->feedItem->updatedAt;
+        }
+
+        if ($this->feedItem->slug) {
+            $postArr['post_name'] = $this->feedItem->slug;
+        }
+
         Logger::debug('Insert new post ' . $postArr['post_title'], $postArr);
         $this->importedId = wp_insert_post($postArr, $wpError);
 

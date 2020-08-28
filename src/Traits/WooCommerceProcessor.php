@@ -53,6 +53,9 @@ trait WooCommerceProcessor
         $product->set_description(
             $this->cleanupContentBeforeImport($productContent)
         );
+        if ($this->feedItem->slug) {
+            $product->set_slug($this->feedItem->slug);
+        }
         $product->set_regular_price($productPrice);
 
         $this->importedId = $product->save();
@@ -61,6 +64,26 @@ trait WooCommerceProcessor
             update_post_meta($this->importedId, '_original_id', $originalId);
         }
         return $this->importedId;
+    }
+
+    public function importProductCategory()
+    {
+        $name = $this->feedItem->title;
+        $term = term_exists($name, 'product_cat');
+
+        $categoryArgs = array(
+            'name' => $name,
+            'description' => $this->feedItem->content,
+        );
+        if ($this->feedItem->slug) {
+            $categoryArgs['slug'] = $this->feedItem->slug;
+        }
+
+        if ($term > 0) {
+            wp_update_term($term, 'product_cat', $categoryArgs);
+        } else {
+            wp_insert_term($name, 'product_cat', $categoryArgs);
+        }
     }
 
     /**
