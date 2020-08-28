@@ -135,6 +135,14 @@ trait WordPressProcessor
             );
             return $this->importedId;
         }
+
+        if (is_null($wpError)) {
+            $wpError = new \WP_Error(
+                'invalid_post_attribute',
+                sprintf(__('Your post attributes include the invalid values'))
+            );
+        }
+
         return $wpError;
     }
 
