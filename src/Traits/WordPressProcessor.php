@@ -96,33 +96,49 @@ trait WordPressProcessor
             $originalId,
             'post'
         );
-        if ($this->importedId > 0) {
-            Logger::debug(sprintf('Found the post %d so the process will continue with next step', $this->importedId));
-            return $this->importedId;
-        }
 
-        $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
-        $postArr    = array(
+        // Create the post attributes to import or update
+        $postArr = array(
             'post_type'    => 'post',
-            'post_title'   => $this->feedItem->title,
-            'post_content' => $this->cleanupContentBeforeImport($postContent),
-            'post_status'  => $postStatus,
-            'post_author'  => $this->getAuthor(),
         );
 
+        if ($this->feedItem->slug) {
+            $postArr['post_name'] = trim($this->feedItem->slug);
+        }
         if ($this->feedItem->publishedAt) {
             $postArr['post_date'] = $this->feedItem->publishedAt;
         } elseif ($this->feedItem->createdAt) {
             $postArr['post_date'] = $this->feedItem->createdAt;
         }
-
         if ($this->feedItem->updatedAt) {
             $postArr['post_modified'] = $this->feedItem->updatedAt;
         }
 
-        if ($this->feedItem->slug) {
-            $postArr['post_name'] = $this->feedItem->slug;
+        if ($this->importedId > 0) {
+            Logger::debug(sprintf('Found the post %d so the process will continue with next step', $this->importedId));
+            $postArr = array(
+                'ID' => $this->importedId,
+            );
+
+            // Check update process is Ok
+            if (is_wp_error(wp_update_post(apply_filters(
+                'rampho_rake_update_post_args',
+                $postArr,
+                $this->feedItem,
+                $this, // Current processor
+            )))) {
+                Logger::warning(sprintf('Update post #%d - %s is failed', $this->importId, $this->feedItem->title));
+            }
+            return $this->importedId;
         }
+
+        $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
+        $postArr    = $postArr + array(
+            'post_title'   => $this->feedItem->title,
+            'post_content' => $this->cleanupContentBeforeImport($postContent),
+            'post_status'  => $postStatus,
+            'post_author'  => $this->getAuthor(),
+        );
 
         Logger::debug('Insert new post ' . $postArr['post_title'], $postArr);
         $this->importedId = wp_insert_post($postArr, $wpError);
