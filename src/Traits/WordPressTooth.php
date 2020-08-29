@@ -56,7 +56,13 @@ trait WordPressTooth
         $this->requireWordPressSupports();
         Logger::debug(sprintf('Download the %s resource: %s', $resource->type, $resource->guid));
         try {
-            $response   = Request::sendRequest('GET', $resource->guid);
+            $response   = Request::sendRequest(
+                'GET',
+                $resource->guid,
+                apply_filters( 'rake_wordpress_download_image_request_options', array(
+                    'verify' => false,
+                ))
+            );
             $stream     = $response->getBody();
             $tempFile   = tmpfile();
             if ($stream instanceof StreamInterface && $stream->isWritable()) {
