@@ -59,9 +59,7 @@ trait WordPressTooth
             $response   = Request::sendRequest(
                 'GET',
                 $resource->guid,
-                apply_filters( 'rake_wordpress_download_image_request_options', array(
-                    'verify' => false,
-                ))
+                apply_filters( 'rake_wordpress_download_image_request_options', array() )
             );
             $stream     = $response->getBody();
             $tempFile   = tmpfile();
