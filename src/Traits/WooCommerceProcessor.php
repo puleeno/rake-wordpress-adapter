@@ -122,7 +122,7 @@ trait WooCommerceProcessor
         $parentId = 0;
         if (is_array($productCategories)) {
             // Remove the categories with empty names;
-            $categories = array_filter($categories);
+            $productCategories = array_filter($productCategories);
 
             foreach ($productCategories as $category) {
                 $category = trim($category);
