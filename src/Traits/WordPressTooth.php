@@ -56,6 +56,7 @@ trait WordPressTooth
         $this->requireWordPressSupports();
         Logger::debug(sprintf('Download the %s resource: %s', $resource->type, $resource->guid));
         try {
+            $tempFile   = tmpfile();
             $response   = Request::sendRequest(
                 'GET',
                 $resource->guid,
@@ -66,7 +67,6 @@ trait WordPressTooth
                 )
             );
             $stream     = $response->getBody();
-            $tempFile   = tmpfile();
             if ($stream instanceof StreamInterface && $stream->isWritable()) {
                 fwrite($tempFile, $stream);
             } else {
@@ -118,7 +118,7 @@ trait WordPressTooth
         } catch (Throwable $e) {
             Logger::warning(sprintf("%s\n%s", $e->getMessage(), var_export(array(
                 'url' => $resource->guid,
-                'mime_type' => mime_content_type($meta['uri']),
+                'mime_type' => isset($meta['uri']) ? mime_content_type($meta['uri']) : 'unknown',
             ), true)), (array)$resource);
             if ($e instanceof RequestException && is_callable([$e, 'getResponse'])) {
                 $response = $e->getResponse();
