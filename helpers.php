@@ -20,7 +20,7 @@ function fetch_extension_mime_types()
     $mimes  = [];
     $source = 'https://gist.githubusercontent.com/AshHeskes/6038140/raw/file-extension-to-mime-types.json';
     try {
-        $response = Request::sendRequest('GET', $source);
+        $response = Request::sendRequest('GET', $source, array('verify' => false));
         $body     = $response->getBody();
         $mimes    = json_decode($body, true);
 
