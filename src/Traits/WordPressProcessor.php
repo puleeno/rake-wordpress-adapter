@@ -141,7 +141,7 @@ trait WordPressProcessor
         );
 
         Logger::debug('Insert new post ' . $postArr['post_title'], $postArr);
-        $this->importedId = wp_insert_post($postArr, $wpError);
+        $this->importedId = wp_insert_post($postArr);
 
         if ($this->importedId > 0) {
             update_post_meta(
@@ -152,14 +152,14 @@ trait WordPressProcessor
             return $this->importedId;
         }
 
-        if (is_null($wpError)) {
-            $wpError = new \WP_Error(
+        if (is_null($this->importedId)) {
+            $this->importedId = new \WP_Error(
                 'invalid_post_attribute',
                 sprintf(__('Your post attributes include the invalid values'))
             );
         }
 
-        return $wpError;
+        return $this->importedId;
     }
 
     public function importPage($pageContent = null)
