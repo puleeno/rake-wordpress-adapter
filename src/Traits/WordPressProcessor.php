@@ -35,7 +35,6 @@ trait WordPressProcessor
                 WHERE p.post_title=%s
                     AND p.post_type=%s
                     AND p.post_status=%s
-                    AND post_status=%s
                     AND pm.meta_key=%s
                     AND pm.meta_value=%s",
                 $postTitle,
@@ -199,6 +198,7 @@ trait WordPressProcessor
         );
 
         Logger::debug('Insert new page ' . $postArr['post_title'], $postArr);
+        $wpError = null;
         $this->importedId = wp_insert_post($postArr, $wpError);
         if ($this->importedId > 0) {
             return $this->importedId;
