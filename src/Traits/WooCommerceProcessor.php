@@ -1,12 +1,10 @@
 <?php
 namespace Puleeno\Rake\WordPress\Traits;
 
-use WC_Product;
+use WP_Error;
 use WC_Product_Simple;
 use WC_Product_Attribute;
 use WC_Data_Exception;
-use wc_create_attribute;
-use taxonomy_exists;
 use Ramphor\Rake\Facades\Logger;
 
 trait WooCommerceProcessor
@@ -16,20 +14,31 @@ trait WooCommerceProcessor
     protected $appendProductTags = false;
 
     /**
+     * @var \Ramphor\Rake\DataSource\FeedItem
+     */
+    protected $feedItem;
+
+    /**
      * Import product from feed item
      *
      * @param string $productContent
      * @param string $title
      * @link https://docs.woocommerce.com/wc-apidocs/class-WC_Product.html
-     * @return void
+     *
+     * @return int|null
      */
     public function importProduct($productContent = null, $title = null)
     {
         if (!class_exists(WC_Product_Simple::class)) {
             return new WP_Error('rake_import', 'The WooCommerce product is not registed in your system');
         }
+
         if (is_null($productContent)) {
-            $productContent = (string)$this->feedItem->content;
+            if ($this->feedItem->productContent) {
+                $productContent = (string)$this->feedItem->productContent;
+            } else {
+                $productContent = (string)$this->feedItem->content;
+            }
         } else {
             $productContent = (string)$productContent;
             $this->feedItem->setProperty(
@@ -38,8 +47,16 @@ trait WooCommerceProcessor
             );
         }
 
-        $productName      = is_null($title) ? $this->feedItem->title : $title;
+        $productName = $title;
+        if (is_null($productName)) {
+            if ($this->feedItem->productName) {
+                $productName = $this->feedItem->productName;
+            } else {
+                $productName = $this->feedItem->title;
+            }
+        }
         $originalId       = $this->feedItem->getMeta('original_id', null);
+
         $this->importedId = $this->checkIsExists($productName, $originalId, 'product');
 
         if ($this->importedId > 0) {
@@ -47,7 +64,7 @@ trait WooCommerceProcessor
         }
 
         $product       = $this->createProduct();
-        $productPrice  = $this->feedItem->getMeta('product_price', 0);
+        $productPrice  = intval($this->feedItem->productPrice);
 
         $product->set_name($productName);
         $product->set_description(
@@ -66,23 +83,28 @@ trait WooCommerceProcessor
         return $this->importedId;
     }
 
+    /**
+     * Import product category
+     *
+     * @return array|\WP_Error
+     */
     public function importProductCategory()
     {
-        $name = $this->feedItem->title;
+        $name = $this->feedItem->productCatetegoryName;
         $term = term_exists($name, 'product_cat');
 
         $categoryArgs = array(
             'name' => $name,
-            'description' => $this->feedItem->content,
+            'description' => $this->feedItem->productCategoryDesc,
         );
         if ($this->feedItem->slug) {
             $categoryArgs['slug'] = $this->feedItem->slug;
         }
 
         if ($term > 0) {
-            wp_update_term($term, 'product_cat', $categoryArgs);
+            return wp_update_term($term, 'product_cat', $categoryArgs);
         } else {
-            wp_insert_term($name, 'product_cat', $categoryArgs);
+            return wp_insert_term($name, 'product_cat', $categoryArgs);
         }
     }
 
@@ -101,7 +123,8 @@ trait WooCommerceProcessor
      * @param string $productType  The WooCommerce product type
      * @link https://docs.woocommerce.com/document/managing-products/#section-4
      * @link https://github.com/woocommerce/woocommerce/wiki/Product-Data-Schema
-     * @return void
+     *
+     * @return \WC_Product
      */
     public function createProduct($productType = null)
     {

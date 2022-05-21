@@ -10,6 +10,11 @@ trait WordPressProcessor
     protected $appendPostTags = false;
 
     /**
+     * @var \Ramphor\Rake\DataSource\FeedItem
+     */
+    protected $feedItem;
+
+    /**
      * Check the post data is exists with post title and original ID
      *
      * @param string $postTitle
@@ -173,9 +178,11 @@ trait WordPressProcessor
             );
         }
 
+        $pageTitle = empty($this->feedItem->pageTitle) ? $this->feedItem->title : $this->feedItem->title;
+
         $originalId       = $this->feedItem->getMeta('original_id', null);
         $this->importedId = $this->checkIsExists(
-            $this->feedItem->title,
+            $pageTitle,
             $originalId,
             'post'
         );
@@ -191,7 +198,7 @@ trait WordPressProcessor
         $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
         $postArr    = array(
             'post_type'    => 'page',
-            'post_title'   => $this->feedItem->title,
+            'post_title'   => $pageTitle,
             'post_content' => $this->cleanupContentBeforeImport($pageContent),
             'post_status'  => $postStatus,
             'post_author'  => $this->getAuthor(),
