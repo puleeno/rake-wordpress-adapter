@@ -246,15 +246,20 @@ trait WordPressTooth
         }
     }
 
-    public function getPostType($type)
+    public function getDataType($resource)
     {
-        return $type;
+        if (post_type_exists($resource->newType)) {
+            return $resource->newType;
+        } elseif(taxonomy_exists($resource->newType)) {
+            return $resource->newType;
+        }
+        return $resource->newType;
     }
 
     public function updateGallaryImage(Resource $postResource, $attachmentId)
     {
         $postId   = $postResource->newGuid;
-        $postType = $this->getPostType($postResource->newType);
+        $postType = $this->getDataType($postResource);
 
         if ($postType === 'product') {
             $postThumbnailId = get_post_thumbnail_id($postId);
@@ -267,7 +272,11 @@ trait WordPressTooth
             }
 
             $galleryImages   = explode(',', get_post_meta($postId, '_product_image_gallery', true));
-            $galleryImages[] = $attachmentId;
+
+            // Push gallery image to list if not exists.
+            if (in_array($attachmentId, $galleryImages)) {
+                $galleryImages[] = $attachmentId;
+            }
 
             Logger::debug(sprintf('The attachment #%d is appended to product gallery', $attachmentId));
             return update_post_meta(
