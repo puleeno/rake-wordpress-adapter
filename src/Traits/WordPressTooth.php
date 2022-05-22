@@ -229,11 +229,21 @@ trait WordPressTooth
 
     public function updateCoverImage(Resource $postResource, $attachmentId)
     {
-        return update_post_meta(
-            $postResource->newGuid,
-            '_thumbnail_id',
-            $attachmentId
-        );
+        if (post_type_exists($postResource->newType)) {
+            return update_post_meta(
+                $postResource->newGuid,
+                '_thumbnail_id',
+                $attachmentId
+            );
+        } elseif (taxonomy_exists($postResource->newType)) {
+            if ($postResource->newType === 'product_cat') {
+                return update_term_meta(
+                    $postResource->newGuid,
+                    'thumbnail_id',
+                    $attachmentId
+                );
+            }
+        }
     }
 
     public function getPostType($type)

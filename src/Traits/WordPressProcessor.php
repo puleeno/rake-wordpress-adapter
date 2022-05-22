@@ -144,7 +144,7 @@ trait WordPressProcessor
             'post_author'  => $this->getAuthor(),
         );
 
-        Logger::debug('Insert new post ' . $postArr['post_title'], $postArr);
+        Logger::debug('Insert new post "' . $postArr['post_title'] . '"', $postArr);
         $this->importedId = wp_insert_post($postArr);
 
         if ($this->importedId > 0) {
