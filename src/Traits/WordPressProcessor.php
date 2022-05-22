@@ -303,4 +303,25 @@ trait WordPressProcessor
             $importer->importDescription($postId, $seoDescription);
         }
     }
+
+    public function importTermSeo($termId = null)
+    {
+        if (is_null($termId)) {
+            if (empty($this->importedId)) {
+                Logger::warning('Need post ID to import SEO metadata');
+                return;
+            }
+            $termId = $this->importedId;
+        }
+        $importer = SeoImporter::instance();
+
+        $seoTitle = $this->feedItem->getMeta('seo_title', null);
+        if (!empty($seoTitle)) {
+            $importer->importTermTitle($termId, $seoTitle);
+        }
+        $seoDescription = $this->feedItem->getMeta('seo_description', null);
+        if (!empty($seoDescription)) {
+            $importer->importTermDescription($termId, $seoDescription);
+        }
+    }
 }

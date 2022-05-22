@@ -250,7 +250,7 @@ trait WordPressTooth
     {
         if (post_type_exists($resource->newType)) {
             return $resource->newType;
-        } elseif(taxonomy_exists($resource->newType)) {
+        } elseif (taxonomy_exists($resource->newType)) {
             return $resource->newType;
         }
         return $resource->newType;

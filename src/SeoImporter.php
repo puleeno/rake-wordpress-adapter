@@ -67,4 +67,36 @@ class SeoImporter
             }
         }
     }
+
+    public function importTermTitle($termId, $seoTitle)
+    {
+        foreach ($this->seoPlugins as $seoInfo) {
+            if (!isset($seoInfo['metadata']) || !isset($seoInfo['fields'])) {
+                continue;
+            }
+            $fields = $seoInfo['fields'];
+            if (empty($fields['title'])) {
+                return false;
+            }
+            if ($seoInfo['metadata'] === 'postmeta') {
+                update_term_meta($termId, $fields['title'], $seoTitle);
+            }
+        }
+    }
+
+    public function importTermDescription($termId, $seoDescription)
+    {
+        foreach ($this->seoPlugins as $seoInfo) {
+            if (!isset($seoInfo['metadata']) || !isset($seoInfo['fields'])) {
+                continue;
+            }
+            $fields = $seoInfo['fields'];
+            if (empty($fields['description'])) {
+                return false;
+            }
+            if ($seoInfo['metadata'] === 'postmeta') {
+                update_term_meta($termId, $fields['description'], $seoDescription);
+            }
+        }
+    }
 }
