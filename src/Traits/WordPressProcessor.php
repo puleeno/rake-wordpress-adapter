@@ -94,7 +94,7 @@ trait WordPressProcessor
                 $postContent
             );
         }
-        $originalId       = $this->feedItem->getMeta('original_id', null);
+        $originalId       = $this->feedItem->originalId;
         $this->importedId = $this->checkIsExists(
             $this->feedItem->title,
             $originalId,
@@ -178,9 +178,9 @@ trait WordPressProcessor
             );
         }
 
-        $pageTitle = empty($this->feedItem->pageTitle) ? $this->feedItem->title : $this->feedItem->title;
+        $pageTitle = empty($this->feedItem->pageTitle) ? $this->feedItem->title : $this->feedItem->pageTitle;
 
-        $originalId       = $this->feedItem->getMeta('original_id', null);
+        $originalId       = $this->feedItem->originalId;
         $this->importedId = $this->checkIsExists(
             $pageTitle,
             $originalId,

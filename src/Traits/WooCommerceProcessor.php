@@ -10,6 +10,8 @@ use Ramphor\Rake\Facades\Logger;
 trait WooCommerceProcessor
 {
     protected $importedId;
+    protected $importedNewType;
+
     protected $appendProductCategories = false;
     protected $appendProductTags = false;
 
@@ -17,6 +19,11 @@ trait WooCommerceProcessor
      * @var \Ramphor\Rake\DataSource\FeedItem
      */
     protected $feedItem;
+
+    /**
+     * @var \Ramphor\Rake\Abstracts\Tooth
+     */
+    protected $tooth;
 
     /**
      * Import product from feed item
@@ -55,7 +62,7 @@ trait WooCommerceProcessor
                 $productName = $this->feedItem->title;
             }
         }
-        $originalId       = $this->feedItem->getMeta('original_id', null);
+        $originalId       = $this->feedItem->originalId;
 
         $this->importedId = $this->checkIsExists($productName, $originalId, 'product');
 
@@ -90,7 +97,7 @@ trait WooCommerceProcessor
      */
     public function importProductCategory()
     {
-        $name = $this->feedItem->productCatetegoryName;
+        $name = $this->feedItem->productCategoryName;
         $term = term_exists($name, 'product_cat');
 
         $categoryArgs = array(
@@ -102,10 +109,20 @@ trait WooCommerceProcessor
         }
 
         if ($term > 0) {
-            return wp_update_term($term, 'product_cat', $categoryArgs);
+            $term_taxonomy = wp_update_term($term, 'product_cat', $categoryArgs);
         } else {
-            return wp_insert_term($name, 'product_cat', $categoryArgs);
+            $term_taxonomy = wp_insert_term($name, 'product_cat', $categoryArgs);
         }
+
+        if (is_wp_error($term_taxonomy)) {
+            return $this->importedId = $term_taxonomy;
+        }
+
+        $this->importedId      = $term_taxonomy['term_id'];
+        $this->importedNewType = 'product_cat';
+
+
+        return $this->importedId;
     }
 
     /**

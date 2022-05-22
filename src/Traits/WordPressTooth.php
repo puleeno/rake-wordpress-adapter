@@ -55,6 +55,8 @@ trait WordPressTooth
     {
         $this->requireWordPressSupports();
         Logger::debug(sprintf('Download the %s resource: %s', $resource->type, $resource->guid));
+        $parentResource = null;
+
         try {
             $tempFile   = tmpfile();
             $response   = Request::sendRequest(
@@ -118,6 +120,7 @@ trait WordPressTooth
         } catch (Throwable $e) {
             Logger::warning(sprintf("%s\n%s", $e->getMessage(), var_export(array(
                 'url' => $resource->guid,
+                'from' => $parentResource ? $parentResource->guid : '',
                 'mime_type' => isset($meta['uri']) ? mime_content_type($meta['uri']) : 'unknown',
             ), true)), (array)$resource);
             if ($e instanceof RequestException && is_callable([$e, 'getResponse'])) {
@@ -210,7 +213,7 @@ trait WordPressTooth
             }
             $image->setAttribute('src', $imageUrl);
 
-            Logger::debug(sprintf('The image(%s) is replated by new URL %s', $oldUrl, $imageUrl));
+            Logger::debug(sprintf('The image(%s) is replaced by new URL %s', $oldUrl, $imageUrl));
         }
 
         $newContent = $document->innerHtml;
