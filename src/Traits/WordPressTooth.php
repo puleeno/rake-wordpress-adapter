@@ -23,6 +23,7 @@ trait WordPressTooth
     {
         $activePlugins = get_option('active_plugins', []);
         if (in_array('woocommerce/woocommerce.php', $activePlugins)) {
+            Logger::debug('Load Woocommerce functions to import Product data');
             CategoryLookup::define_category_lookup_tables_in_wpdb();
         }
     }
