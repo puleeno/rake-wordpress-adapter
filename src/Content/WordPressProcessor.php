@@ -16,8 +16,8 @@ abstract class WordPressProcessor extends Processor
     {
         $document = new Dom();
         $document->loadStr($this->feedItem->content);
-        $gallaryImages  = $this->feedItem->galleryImages;
-        $totalGalleries = count($gallaryImages);
+        $galleryImages  = $this->feedItem->galleryImages;
+        $totalGalleries = count($galleryImages);
 
         Logger::debug(sprintf('The processor founded %d WordPress gallery', $totalGalleries));
         if ($totalGalleries > 0) {
@@ -51,7 +51,7 @@ abstract class WordPressProcessor extends Processor
                     }
 
                     $images[]        = $imageUrl;
-                    $gallaryImages[] = $imageUrl;
+                    $galleryImages[] = $imageUrl;
                 }
 
 
@@ -85,7 +85,7 @@ abstract class WordPressProcessor extends Processor
                 ));
                 $gallery->getParent()->replaceChild($gallery->id(), $gallery_shortcode);
             }
-            $this->feedItem->setProperty('galleryImages', $gallaryImages);
+            $this->feedItem->setProperty('galleryImages', $galleryImages);
             $this->feedItem->setProperty('content', $document->innerHtml);
         }
     }

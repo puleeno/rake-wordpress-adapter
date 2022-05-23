@@ -116,7 +116,7 @@ trait WordPressTooth
                 $newType = $existsResource->newType;
 
                 Logger::info(sprintf(
-                    'The image hash %s of URL %s is already exists as %s(#%d)',
+                    'The image hash "%s" of URL %s is already exists as %s(#%d)',
                     $hashFile,
                     $resource->guid,
                     $existsResource->newType,
@@ -266,7 +266,7 @@ trait WordPressTooth
         return $resource->newType;
     }
 
-    public function updateGallaryImage(Resource $postResource, $attachmentId)
+    public function updateGalleryImage(Resource $postResource, $attachmentId)
     {
         $postId   = $postResource->newGuid;
         $postType = $this->getDataType($postResource);
