@@ -1,10 +1,11 @@
 <?php
 namespace Puleeno\Rake\WordPress\Traits;
 
-use \Throwable;
+use Throwable;
 use Exception;
 use Psr\Http\Message\StreamInterface;
 use Http\Client\Exception\RequestException;
+use Automattic\WooCommerce\Internal\Admin\CategoryLookup;
 use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Request;
 use Ramphor\Rake\Facades\Logger;
@@ -17,6 +18,14 @@ trait WordPressTooth
 {
     protected $resourceType                  = 'attachment';
     protected $maxRetryDownloadResourceTimes = 10;
+
+    public function wordpressBootstrap()
+    {
+        $activePlugins = get_option('active_plugins', []);
+        if (in_array('woocommerce/woocommerce.php', $activePlugins)) {
+            CategoryLookup::define_category_lookup_tables_in_wpdb();
+        }
+    }
 
     protected function requireWordPressSupports()
     {
