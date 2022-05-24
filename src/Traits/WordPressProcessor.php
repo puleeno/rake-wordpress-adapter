@@ -178,7 +178,11 @@ trait WordPressProcessor
             );
         }
 
-        $pageTitle = empty($this->feedItem->pageTitle) ? $this->feedItem->title : $this->feedItem->pageTitle;
+        $pageTitle = $this->feedItem->title;
+        if (!empty($this->feedItem->pageTitle)) {
+            $pageTitle = $this->feedItem->pageTitle;
+            $this->feedItem->setProperty('title', $this->feedItem->pageTitle);
+        }
 
         $originalId       = $this->feedItem->originalId;
         $this->importedId = $this->checkIsExists(

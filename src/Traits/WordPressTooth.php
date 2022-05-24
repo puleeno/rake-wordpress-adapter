@@ -46,11 +46,16 @@ trait WordPressTooth
     {
         $fileName  = basename($url);
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+
+        if (strpos($fileName, '%') !== false) {
+            $fileName = urldecode($fileName);
+        }
         if ($extension !== "") {
             $fileNameWithoutExtension = sanitize_title(str_replace('.' . $extension, '', $fileName));
         } else {
             $fileNameWithoutExtension = sanitize_title($fileName);
         }
+
         if (pl_validate_extension($extension)) {
             return sprintf('%s.%s', $fileNameWithoutExtension, $extension);
         }

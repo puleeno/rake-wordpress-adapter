@@ -58,6 +58,7 @@ trait WooCommerceProcessor
         if (is_null($productName)) {
             if ($this->feedItem->productName) {
                 $productName = $this->feedItem->productName;
+                $this->feedItem->setProperty('title', $productName);
             } else {
                 $productName = $this->feedItem->title;
             }
