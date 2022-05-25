@@ -78,6 +78,13 @@ trait WooCommerceProcessor
         $product->set_description(
             $this->cleanupContentBeforeImport($productContent)
         );
+        if ($this->feedItem->productShortDesc || $this->feedItem->productShortDescription) {
+            $product->set_short_description(
+                $this->feedItem->productShortDesc
+                    ? $this->feedItem->productShortDesc
+                    : $this->feedItem->productShortDescription
+            );
+        }
         if ($this->feedItem->slug) {
             $product->set_slug($this->feedItem->slug);
         }
@@ -159,8 +166,15 @@ trait WooCommerceProcessor
             $productId = $this->importedId;
         }
 
-        $termIds  = [];
-        $parentId = 0;
+        $termIds           = [];
+        $parentId          = 0;
+        $productCategories = apply_filters(
+            "{$this->tooth->getId()}_product_categories",
+            $productCategories,
+            $this->feedItem,
+            $productId
+        );
+
         if (is_array($productCategories)) {
             // Remove the categories with empty names;
             $productCategories = array_filter($productCategories);
