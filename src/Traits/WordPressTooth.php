@@ -289,16 +289,16 @@ trait WordPressTooth
             $galleryImages   = explode(',', get_post_meta($postId, '_product_image_gallery', true));
 
             // Push gallery image to list if not exists.
-            if (in_array($attachmentId, $galleryImages)) {
+            if (!in_array($attachmentId, $galleryImages)) {
                 $galleryImages[] = $attachmentId;
-            }
 
-            Logger::debug(sprintf('The attachment #%d is appended to product gallery', $attachmentId));
-            return update_post_meta(
-                $postId,
-                '_product_image_gallery',
-                implode(',', array_unique($galleryImages))
-            );
+                Logger::debug(sprintf('The attachment #%d is appended to product gallery', $attachmentId));
+                return update_post_meta(
+                    $postId,
+                    '_product_image_gallery',
+                    implode(',', array_unique($galleryImages))
+                );
+            }
         }
     }
 }
