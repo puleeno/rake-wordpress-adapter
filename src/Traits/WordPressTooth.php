@@ -245,6 +245,8 @@ trait WordPressTooth
     public function updateCoverImage(Resource $postResource, $attachmentId)
     {
         if (post_type_exists($postResource->newType)) {
+            do_action('rake/wordpress/cover/post/updated', $postResource->newGuid, $attachmentId);
+
             return update_post_meta(
                 $postResource->newGuid,
                 '_thumbnail_id',
