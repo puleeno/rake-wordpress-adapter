@@ -217,7 +217,7 @@ trait WordPressProcessor
         return $wpError;
     }
 
-    public function importPostCategories($categories, $isNested = false, $postId = null)
+    public function importPostCategories($categories, $isNested = false, $postId = null, $taxonomy = 'category')
     {
         if (is_null($postId)) {
             if (empty($this->importedId)) {
@@ -235,14 +235,14 @@ trait WordPressProcessor
 
             foreach ($categories as $category) {
                 $category = trim($category);
-                $term     = term_exists($category, 'category', $parentId);
+                $term     = term_exists($category, $taxonomy, $parentId);
                 if (!is_null($term)) {
                     $termId    = (int)$term['term_id'];
                     $termIds[] = $termId;
                     if ($isNested) {
                         if ($parentId > 0) {
                             if ($parentId > 0) {
-                                wp_update_term($termId, 'category', [
+                                wp_update_term($termId, $taxonomy, [
                                     'parent' => $parentId
                                 ]);
                             }
@@ -258,7 +258,7 @@ trait WordPressProcessor
                 }
 
                 Logger::debug(sprintf('Insert new post category: "%s"', $category), $categoryArgs);
-                $term = wp_insert_term($category, 'category', $categoryArgs);
+                $term = wp_insert_term($category, $taxonomy, $categoryArgs);
                 if (is_wp_error($term)) {
                     Logger::warning($term->get_error_message(), $categoryArgs);
                     continue;
@@ -272,7 +272,11 @@ trait WordPressProcessor
             }
         }
 
-        return wp_set_post_categories($postId, $termIds, $this->appendPostCategories);
+        if ($taxonomy === 'category') {
+            return wp_set_post_categories($postId, $termIds, $this->appendPostCategories);
+        }
+
+        return wp_set_post_terms($postId, $termIds, $taxonomy, $this->appendPostCategories);
     }
 
     public function importPostTags($tags, $postId = null)
