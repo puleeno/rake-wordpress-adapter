@@ -18,6 +18,7 @@ trait WordPressTooth
 {
     protected $resourceType                  = 'attachment';
     protected $maxRetryDownloadResourceTimes = 10;
+    protected $usePostTitleAsImageFileName   = false;
 
     public function wordpressBootstrap()
     {
@@ -42,7 +43,7 @@ trait WordPressTooth
         return $this->resourceType;
     }
 
-    protected function generateFileName($url, $realFile)
+    protected function generateFileName($url, $realFile, $postTitle = null)
     {
         $fileName  = basename($url);
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
@@ -50,7 +51,10 @@ trait WordPressTooth
         if (strpos($fileName, '%') !== false) {
             $fileName = urldecode($fileName);
         }
-        if ($extension !== "") {
+
+        if ($postTitle != null && $this->usePostTitleAsImageFileName) {
+            $fileNameWithoutExtension = sanitize_title($postTitle);
+        } elseif ($extension !== "") {
             $fileNameWithoutExtension = sanitize_title(str_replace('.' . $extension, '', $fileName));
         } else {
             $fileNameWithoutExtension = sanitize_title($fileName);
@@ -96,12 +100,14 @@ trait WordPressTooth
             $newGuid        = null;
             $existsResource = Resources::getFromHash($hashFile, $newType);
             if (is_null($existsResource)) {
-                $file_array = array(
-                    'name'     => $this->generateFileName($resource->guid, $meta['uri']),
-                    'tmp_name' => $meta['uri']
-                );
                 $parentResource = Resources::findParent($resource->id);
                 $postId         = is_null($parentResource) ? 0 : (int)$parentResource->newGuid;
+                $postTitle      = $this->usePostTitleAsImageFileName ? get_the_title($postId) : null;
+
+                $file_array = array(
+                    'name'     => $this->generateFileName($resource->guid, $meta['uri'], $postTitle),
+                    'tmp_name' => $meta['uri']
+                );
                 $newGuid        = media_handle_sideload($file_array, $postId);
 
                 if (is_wp_error($newGuid)) {
