@@ -52,7 +52,7 @@ trait WordPressTooth
             $fileName = urldecode($fileName);
         }
 
-        if ($postTitle != null && $this->usePostTitleAsImageFileName) {
+        if (!empty($postTitle) && $this->usePostTitleAsImageFileName) {
             $fileNameWithoutExtension = sanitize_title($postTitle);
         } elseif ($extension !== "") {
             $fileNameWithoutExtension = sanitize_title(str_replace('.' . $extension, '', $fileName));
