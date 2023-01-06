@@ -43,6 +43,10 @@ trait WordPressTooth
         return $this->resourceType;
     }
 
+    public function usePostTitleAsImageFileName() {
+        return $this->usePostTitleAsImageFileName;
+    }
+
     protected function generateFileName($url, $realFile, $postTitle = null)
     {
         $fileName  = basename($url);
