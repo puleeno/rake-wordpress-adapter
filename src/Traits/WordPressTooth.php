@@ -56,7 +56,7 @@ trait WordPressTooth
             $fileName = urldecode($fileName);
         }
 
-        if (!empty($postTitle) && $this->usePostTitleAsImageFileName) {
+        if (!empty($postTitle) && $this->usePostTitleAsImageFileName()) {
             $fileNameWithoutExtension = sanitize_title($postTitle);
         } elseif ($extension !== "") {
             $fileNameWithoutExtension = sanitize_title(str_replace('.' . $extension, '', $fileName));
@@ -106,7 +106,7 @@ trait WordPressTooth
             if (is_null($existsResource)) {
                 $parentResource = Resources::findParent($resource->id);
                 $postId         = is_null($parentResource) ? 0 : (int)$parentResource->newGuid;
-                $postTitle      = $this->usePostTitleAsImageFileName ? get_the_title($postId) : null;
+                $postTitle      = $this->usePostTitleAsImageFileName() ? get_the_title($postId) : null;
 
                 $file_array = array(
                     'name'     => $this->generateFileName($resource->guid, $meta['uri'], $postTitle),
