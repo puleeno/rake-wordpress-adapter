@@ -33,10 +33,15 @@ class Driver extends DriverAbstract
             ->query($query);
     }
 
-    public function get(SqlBuilder $query)
+    public function get(SqlBuilder $query, $classToMap = null)
     {
-        return $this->dbInstance
+        $results = $this->dbInstance
             ->get_results($query);
+
+        if (empty($classToMap)) {
+            return $results;
+        }
+        return $this->mapResults($results, $classToMap);
     }
 
     public function row(SqlBuilder $query)
