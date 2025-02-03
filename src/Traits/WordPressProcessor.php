@@ -1,4 +1,5 @@
 <?php
+
 namespace Puleeno\Rake\WordPress\Traits;
 
 use Puleeno\Rake\WordPress\SeoImporter;
@@ -125,12 +126,14 @@ trait WordPressProcessor
             );
 
             // Check update process is Ok
-            if (is_wp_error(wp_update_post(apply_filters(
-                'rampho_rake_update_post_args',
-                $postArr,
-                $this->feedItem,
-                $this, // Current processor
-            )))) {
+            if (
+                is_wp_error(wp_update_post(apply_filters(
+                    'rampho_rake_update_post_args',
+                    $postArr,
+                    $this->feedItem,
+                    $this, // Current processor
+                )))
+            ) {
                 Logger::warning(sprintf('Update post #%d - %s is failed', $this->importId, $this->feedItem->title));
             }
             return $this->importedId;

@@ -1,4 +1,5 @@
 <?php
+
 namespace Puleeno\Rake\WordPress\Content;
 
 use PHPHtmlParser\Dom;

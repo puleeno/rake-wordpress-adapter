@@ -1,4 +1,5 @@
 <?php
+
 namespace Puleeno\Rake\WordPress;
 
 use Ramphor\Sql as SqlBuilder;

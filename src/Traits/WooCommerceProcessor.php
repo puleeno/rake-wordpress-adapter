@@ -1,4 +1,5 @@
 <?php
+
 namespace Puleeno\Rake\WordPress\Traits;
 
 use WP_Error;
@@ -390,7 +391,8 @@ trait WooCommerceProcessor
     }
 
 
-    public function importPostCategory($title=null, $description = null, $slug = null, $shortDescription = null, $taxonomy='category') {
+    public function importPostCategory($title = null, $description = null, $slug = null, $shortDescription = null, $taxonomy = 'category')
+    {
         $title = empty($title) ? $title : $this->feedItem->title;
         $slug = empty($slug) ? $slug : $this->feedItem->slug;
         $description = empty($description) ? $description : $this->feedItem->description;

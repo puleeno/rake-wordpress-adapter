@@ -1,4 +1,5 @@
 <?php
+
 namespace Puleeno\Rake\WordPress;
 
 class SeoImporter
@@ -28,7 +29,7 @@ class SeoImporter
             $this->seoPlugins['rankmath'] = array(
                 'metadata' => 'postmeta',
                 'fields' => array(
-                    'title'=> 'rank_math_title',
+                    'title' => 'rank_math_title',
                     'description' => 'rank_math_description'
                 )
             );

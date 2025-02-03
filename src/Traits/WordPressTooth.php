@@ -1,4 +1,5 @@
 <?php
+
 namespace Puleeno\Rake\WordPress\Traits;
 
 use Throwable;
@@ -43,7 +44,8 @@ trait WordPressTooth
         return $this->resourceType;
     }
 
-    public function usePostTitleAsImageFileName() {
+    public function usePostTitleAsImageFileName()
+    {
         return $this->usePostTitleAsImageFileName;
     }
 
@@ -224,7 +226,7 @@ trait WordPressTooth
             Logger::warning($e->getMessage(), $post->to_array());
         }
 
-        $images   = $document->find('img[src='. $oldUrl.']');
+        $images   = $document->find('img[src=' . $oldUrl . ']');
         foreach ($images as $image) {
             $imageUrl = wp_get_attachment_url($attachmentId);
             if ($imageUrl === false) {
