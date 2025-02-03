@@ -388,4 +388,7 @@ trait WooCommerceProcessor
         $product->set_stock_status($status);
         $product->save();
     }
+
+    public function importPostCategory($title=null, $description = null, $slug = null, $shortDescription = null, $taxonomy='category') {
+    }
 }

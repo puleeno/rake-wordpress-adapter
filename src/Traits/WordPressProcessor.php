@@ -169,7 +169,7 @@ trait WordPressProcessor
     public function importPage($pageContent = null)
     {
         if (is_null($pageContent)) {
-            $pageContent = (string)$this->feedItem->content;
+            $pageContent = (string)$this->feedItem->getMeta('pageContent');
         } else {
             $pageContent = (string)$pageContent;
             $this->feedItem->setProperty(
