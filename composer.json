@@ -4,7 +4,8 @@
     "type": "library",
     "require": {
         "ramphor/rake": "*",
-        "ramphor/logger": "*"
+        "ramphor/logger": "*",
+        "rappasoft/laravel-helpers": "^2.1"
     },
     "license": "MIT",
     "authors": [
