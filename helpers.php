@@ -56,3 +56,11 @@ function pl_convert_mime_type_to_extension($mime)
     }
     return '.unknown';
 }
+
+
+function pl_get_post_category_short_description_meta_name() {
+    return apply_filters(
+        'rake/post/category/short_description_meta_name',
+        'short_description'
+    );
+}
