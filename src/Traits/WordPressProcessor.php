@@ -169,23 +169,10 @@ trait WordPressProcessor
         return $this->importedId;
     }
 
-    public function importPage($pageContent = null)
+    public function importPage($title = null, $pageContent = null)
     {
-        if (is_null($pageContent)) {
-            $pageContent = (string)$this->feedItem->getMeta('pageContent');
-        } else {
-            $pageContent = (string)$pageContent;
-            $this->feedItem->setProperty(
-                'content',
-                $pageContent
-            );
-        }
-
-        $pageTitle = $this->feedItem->title;
-        if (!empty($this->feedItem->pageTitle)) {
-            $pageTitle = $this->feedItem->pageTitle;
-            $this->feedItem->setProperty('title', $this->feedItem->pageTitle);
-        }
+        $pageContent = empty($pageContent) ? (string)$this->feedItem->content : $pageContent;
+        $pageTitle = empty($title) ? $this->feedItem->title : $title;
 
         $originalId       = $this->feedItem->originalId;
         $this->importedId = $this->checkIsExists(
@@ -212,8 +199,10 @@ trait WordPressProcessor
         );
 
         Logger::debug('Insert new page ' . $postArr['post_title'], $postArr);
+
         $wpError = null;
         $this->importedId = wp_insert_post($postArr, $wpError);
+
         if ($this->importedId > 0) {
             return $this->importedId;
         }
