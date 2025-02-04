@@ -104,16 +104,21 @@ trait WooCommerceProcessor
      *
      * @return array|\WP_Error
      */
-    public function importProductCategory()
+    public function importProductCategory($name = null, $description = null, $slug = null)
     {
-        $name = $this->feedItem->productCategoryName;
+        $name = empty($name) ? $this->feedItem->productCategoryName : $name;
+        $description = empty($description) ? $this->feedItem->productCategoryDesc : $description;
         $term = term_exists($name, 'product_cat');
 
         $categoryArgs = array(
             'name' => $name,
-            'description' => $this->feedItem->productCategoryDesc,
+            'description' => $description,
         );
-        if ($this->feedItem->slug) {
+
+        // Set slug value
+        if (!empty($slug)) {
+            $categoryArgs['slug'] = $slug;
+        } elseif ($this->feedItem->slug) {
             $categoryArgs['slug'] = $this->feedItem->slug;
         }
 
@@ -129,7 +134,6 @@ trait WooCommerceProcessor
 
         $this->importedId      = $term_taxonomy['term_id'];
         $this->importedNewType = 'product_cat';
-
 
         return $this->importedId;
     }
