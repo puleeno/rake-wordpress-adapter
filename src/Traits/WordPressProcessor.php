@@ -190,18 +190,40 @@ trait WordPressProcessor
         }
 
         $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
-        $postArr    = array(
+        $postArr = [
             'post_type'    => 'page',
             'post_title'   => $pageTitle,
             'post_content' => $this->cleanupContentBeforeImport($pageContent),
             'post_status'  => $postStatus,
             'post_author'  => $this->getAuthor(),
+        ];
+
+        // Check existing page by slug or title
+        $query_args = [
+            'post_type'      => 'page',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+        ];
+
+        if (!empty($this->feedItem->slug)) {
+            $query_args['name'] = $this->feedItem->slug;
+        } else {
+            $query_args['title'] = $postArr['post_title'];
+        }
+
+        $existing_page = get_posts($query_args);
+
+        if (!empty($existing_page)) {
+            $postArr['ID'] = $existing_page[0]->ID;
+            $this->importedId = wp_update_post($postArr, true);
+        } else {
+            $this->importedId = wp_insert_post($postArr, true);
+        }
+
+        Logger::debug(
+            (!empty($existing_page) ? 'Update' : 'Insert new') . ' page ' . $postArr['post_title'],
+            $postArr
         );
-
-        Logger::debug('Insert new page ' . $postArr['post_title'], $postArr);
-
-        // create post return Post Object or WP_Error object
-        $this->importedId = wp_insert_post($postArr, true);
 
         return $this->importedId;
     }
