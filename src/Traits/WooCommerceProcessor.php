@@ -113,7 +113,7 @@ trait WooCommerceProcessor
 
         $categoryArgs = array(
             'name' => $name,
-            'description' => $description,
+            'description' => $this->cleanupContentBeforeImport($description),
         );
 
         // Set slug value
