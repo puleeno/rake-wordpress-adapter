@@ -111,9 +111,11 @@ trait WooCommerceProcessor
         $description = empty($description) ? $this->feedItem->productCategoryDesc : $description;
         $term = term_exists($name, 'product_cat');
 
+        $termDesc = $this->cleanupContentBeforeImport($description);
+
         $categoryArgs = array(
             'name' => $name,
-            'description' => $this->cleanupContentBeforeImport($description),
+            'description' => $termDesc,
         );
 
         // Set slug value
@@ -132,6 +134,9 @@ trait WooCommerceProcessor
         if (is_wp_error($term_taxonomy)) {
             return $this->importedId = $term_taxonomy;
         }
+
+        // set product category content to attribute `content` to download images and update content text to new URL.
+        $this->feedItem->setProperty('content', $termDesc);
 
         $this->importedId      = $term_taxonomy['term_id'];
         $this->importedNewType = 'product_cat';
