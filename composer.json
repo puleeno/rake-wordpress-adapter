@@ -5,7 +5,8 @@
     "require": {
         "ramphor/rake": "*",
         "ramphor/logger": "*",
-        "rappasoft/laravel-helpers": "^2.1"
+        "rappasoft/laravel-helpers": "^2.1",
+        "ramphor/wp-block-converter": "^1.5"
     },
     "license": "MIT",
     "authors": [
@@ -22,5 +23,10 @@
         "files": [
             "./helpers.php"
         ]
+    },
+    "config": {
+        "allow-plugins": {
+            "alleyinteractive/composer-wordpress-autoloader": true
+        }
     }
 }
