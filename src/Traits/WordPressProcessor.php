@@ -200,13 +200,10 @@ trait WordPressProcessor
 
         Logger::debug('Insert new page ' . $postArr['post_title'], $postArr);
 
-        $wpError = null;
-        $this->importedId = wp_insert_post($postArr, $wpError);
+        // create post return Post Object or WP_Error object
+        $this->importedId = wp_insert_post($postArr, true);
 
-        if ($this->importedId > 0) {
-            return $this->importedId;
-        }
-        return $wpError;
+        return $this->importedId;
     }
 
     public function importPostCategories($categories, $isNested = false, $postId = null, $taxonomy = 'category')

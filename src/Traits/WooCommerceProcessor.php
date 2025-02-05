@@ -41,9 +41,9 @@ trait WooCommerceProcessor
             return new WP_Error('rake_import', 'The WooCommerce product is not registed in your system');
         }
 
-        if (is_null($productContent)) {
-            if ($this->feedItem->productContent) {
-                $productContent = (string)$this->feedItem->productContent;
+        if (empty($productContent)) {
+            if (!empty($this->feedItem->productDesc)) {
+                $productContent = (string)$this->feedItem->productDesc;
             } else {
                 $productContent = (string)$this->feedItem->content;
             }
@@ -96,6 +96,7 @@ trait WooCommerceProcessor
         if ($this->importedId > 0) {
             update_post_meta($this->importedId, '_original_id', $originalId);
         }
+
         return $this->importedId;
     }
 
