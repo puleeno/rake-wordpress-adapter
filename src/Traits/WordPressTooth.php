@@ -2,6 +2,7 @@
 
 namespace Puleeno\Rake\WordPress\Traits;
 
+use Alley\WP\Block_Converter\Block_Converter;
 use Throwable;
 use Exception;
 use Psr\Http\Message\StreamInterface;
@@ -178,10 +179,12 @@ trait WordPressTooth
 
     public function updatePostResource(Resource $resource)
     {
+        $blockConverter = new Block_Converter((string) $resource->content);
+
         return wp_update_post([
             'ID' => $resource->newGuid,
             'post_type' => $resource->newType,
-            'post_content' => $resource->content,
+            'post_content' => $blockConverter->convert(),
         ]);
     }
 
@@ -243,8 +246,12 @@ trait WordPressTooth
             Logger::debug(sprintf('The image(%s) is replaced by new URL %s', $oldUrl, $imageUrl));
         }
 
-        $newContent = $document->innerHtml;
+
+        $blockConverter = new Block_Converter($document->innerHtml);
+        $newContent = $blockConverter->convert();
+
         $parent->setContent($newContent);
+
         $parent->save();
 
         return wp_update_post([

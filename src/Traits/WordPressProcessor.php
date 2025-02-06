@@ -90,11 +90,16 @@ trait WordPressProcessor
             $postContent = (string)$this->feedItem->content;
         } else {
             $postContent = (string)$postContent;
-            $this->feedItem->setProperty(
-                'content',
-                $postContent
-            );
         }
+
+        $postContent = $this->cleanupContentBeforeImport($postContent);
+
+        // compatible with download images feature.
+        $this->feedItem->setProperty(
+            'content',
+            $postContent
+        );
+
         $originalId       = $this->feedItem->originalId;
         $this->importedId = $this->checkIsExists(
             $this->feedItem->title,
@@ -142,7 +147,7 @@ trait WordPressProcessor
         $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
         $postArr    = $postArr + array(
             'post_title'   => $this->feedItem->title,
-            'post_content' => $this->cleanupContentBeforeImport($postContent),
+            'post_content' => $postContent, // this is cleanup content.
             'post_status'  => $postStatus,
             'post_author'  => $this->getAuthor(),
         );
