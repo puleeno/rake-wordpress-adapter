@@ -31,7 +31,19 @@ class SeoImporter
                 'fields' => array(
                     'title' => 'rank_math_title',
                     'description' => 'rank_math_description'
-                )
+                ),
+                'title_format' => '%s'
+            );
+        }
+
+        if (in_array('wordpress-seo/wp-seo.php', $active_plugins)) {
+            $this->seoPlugins['yoast_seo'] = array(
+                'metadata' => 'postmeta',
+                'fields' => array(
+                    'title' => '_yoast_wpseo_title',
+                    'description' => '_yoast_wpseo_metadesc'
+                ),
+                'title_format' => '%s %%sep%% %%sitename%%'
             );
         }
     }
@@ -48,7 +60,14 @@ class SeoImporter
                 return false;
             }
             if ($seoInfo['metadata'] === 'postmeta') {
-                update_post_meta($postId, $fields['title'], $seoTitle);
+                $format = !empty($seoInfo['title_format']) ? $seoInfo['title_format'] : '%s';
+                $format = apply_filters(
+                    'import_seo_title_format',
+                    str_replace('%%', '%%%%', $format),
+                    $seoInfo
+                );
+
+                update_post_meta($postId, $fields['title'], sprintf($format, $seoTitle));
             }
         }
     }

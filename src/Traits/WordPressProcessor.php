@@ -318,11 +318,11 @@ trait WordPressProcessor
         }
         $importer = SeoImporter::instance();
 
-        $seoTitle = $this->feedItem->getMeta('seo_title', null);
+        $seoTitle = $this->feedItem->getMeta('seoTitle', null);
         if (!empty($seoTitle)) {
             $importer->importTitle($postId, $seoTitle);
         }
-        $seoDescription = $this->feedItem->getMeta('seo_description', null);
+        $seoDescription = $this->feedItem->getMeta('seoDescription', null);
         if (!empty($seoDescription)) {
             $importer->importDescription($postId, $seoDescription);
         }
@@ -339,11 +339,11 @@ trait WordPressProcessor
         }
         $importer = SeoImporter::instance();
 
-        $seoTitle = $this->feedItem->getMeta('seo_title', null);
+        $seoTitle = $this->feedItem->getMeta('seoTitle', null);
         if (!empty($seoTitle)) {
             $importer->importTermTitle($termId, $seoTitle);
         }
-        $seoDescription = $this->feedItem->getMeta('seo_description', null);
+        $seoDescription = $this->feedItem->getMeta('seoDescription', null);
         if (!empty($seoDescription)) {
             $importer->importTermDescription($termId, $seoDescription);
         }
