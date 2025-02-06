@@ -44,6 +44,10 @@ trait WooCommerceProcessor
         if (empty($productContent)) {
             if (!empty($this->feedItem->productDesc)) {
                 $productContent = (string)$this->feedItem->productDesc;
+                $this->feedItem->setProperty(
+                    'content',
+                    $productContent
+                );
             } else {
                 $productContent = (string)$this->feedItem->content;
             }
