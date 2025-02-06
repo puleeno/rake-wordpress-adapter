@@ -179,12 +179,10 @@ trait WordPressTooth
 
     public function updatePostResource(Resource $resource)
     {
-        $blockConverter = new Block_Converter((string) $resource->content);
-
         return wp_update_post([
             'ID' => $resource->newGuid,
             'post_type' => $resource->newType,
-            'post_content' => $blockConverter->convert(),
+            'post_content' => $resource->content,
         ]);
     }
 
@@ -247,8 +245,7 @@ trait WordPressTooth
         }
 
 
-        $blockConverter = new Block_Converter($document->innerHtml);
-        $newContent = $blockConverter->convert();
+        $newContent = $document->innerHtml;
 
         $parent->setContent($newContent);
 
