@@ -332,7 +332,7 @@ trait WooCommerceProcessor
                 $wcAttribute->set_id(0);
                 $wcAttribute->set_name($attributeName);
                 $wcAttribute->set_options(explode(
-                    WC_DELIMITER,
+                    constant('WC_DELIMITER'),
                     $attributeValue
                 ));
                 $wcAttribute->set_visible(true);
