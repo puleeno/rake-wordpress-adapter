@@ -84,7 +84,7 @@ trait WordPressProcessor
         return apply_filters('rake_get_feed_author', $authorId);
     }
 
-    public function importPost($postContent = null)
+    public function importPost($postContent = null, $postType = 'post' )
     {
         if (is_null($postContent)) {
             $postContent = (string)$this->feedItem->content;
@@ -109,7 +109,7 @@ trait WordPressProcessor
 
         // Create the post attributes to import or update
         $postArr = array(
-            'post_type'    => 'post',
+            'post_type'    => $postType,
         );
 
         if ($this->feedItem->slug) {
@@ -125,7 +125,7 @@ trait WordPressProcessor
         }
 
         if ($this->importedId > 0) {
-            Logger::debug(sprintf('Found the post %d so the process will continue with next step', $this->importedId));
+            Logger::debug(sprintf('Found the %s %d so the process will continue with next step', $postType, $this->importedId));
             $postArr = array(
                 'ID' => $this->importedId,
             );
@@ -139,7 +139,7 @@ trait WordPressProcessor
                     $this, // Current processor
                 )))
             ) {
-                Logger::warning(sprintf('Update post #%d - %s is failed', $this->importId, $this->feedItem->title));
+                Logger::warning(sprintf('Update %s #%d - %s is failed', $postType, $this->importId, $this->feedItem->title));
             }
             return $this->importedId;
         }
@@ -152,7 +152,7 @@ trait WordPressProcessor
             'post_author'  => $this->getAuthor(),
         );
 
-        Logger::debug('Insert new post "' . $postArr['post_title'] . '"', $postArr);
+        Logger::debug('Insert new "' . $postType . ' '. $postArr['post_title'] . '"', $postArr);
         $this->importedId = wp_insert_post($postArr);
 
         if ($this->importedId > 0) {
@@ -167,7 +167,7 @@ trait WordPressProcessor
         if (is_null($this->importedId)) {
             $this->importedId = new \WP_Error(
                 'invalid_post_attribute',
-                sprintf(__('Your post attributes include the invalid values'))
+                sprintf(__('Your %s attributes include the invalid values', $postType))
             );
         }
 
