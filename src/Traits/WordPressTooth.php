@@ -187,12 +187,24 @@ trait WordPressTooth
         ]);
     }
 
+    protected function getCallbackNameFromResourceType($type) {
+        switch ($type) {
+            case 'content_image':
+                return 'updateContentImage';
+            case 'cover_image':
+                return 'updateCoverImage';
+            case 'gallery_image':
+                return 'updateGalleryImage';
+        }
+    }
+
     public function updateSystemResource(Resource $resource, Resource $parentResource)
     {
-        $resourceType = preg_replace_callback(['/[_|-](\w)/', '/^(\w)/', '/\s/'], function ($match) {
-            return strtoupper($match[1]);
-        }, $resource->type);
-        $callback = [$this, 'update' . $resourceType];
+
+        $callback = [
+            $resource->getTooth(),
+            $this->getCallbackNameFromResourceType($resource->type)
+        ];
 
         if (is_callable($callback)) {
             return call_user_func(

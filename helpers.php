@@ -64,3 +64,17 @@ function pl_get_post_category_short_description_meta_name() {
         'short_description'
     );
 }
+
+function dd2($data) {
+    if (is_array($data)) {
+        if (isset($data['tooth'])) {
+            unset($data['tooth']);
+        }
+    }
+    if (is_object($data)) {
+        if (isset($data->tooth)) {
+            unset($data->tooth);
+        }
+    }
+    dd($data);
+}
