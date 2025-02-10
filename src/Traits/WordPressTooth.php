@@ -208,7 +208,7 @@ trait WordPressTooth
         ];
         $callback = is_null($parentResource)
             ? $originCallback
-            : apply_filters('rake/system/resource/callback', $originCallback, $parentResource);
+            : apply_filters("rake/system/resource/{$resource->type}/callback", $originCallback, $parentResource, $resource);
 
         if (is_callable($callback)) {
             return call_user_func(
