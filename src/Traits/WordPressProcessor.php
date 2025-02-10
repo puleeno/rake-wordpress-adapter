@@ -84,7 +84,7 @@ trait WordPressProcessor
         return apply_filters('rake_get_feed_author', $authorId);
     }
 
-    public function importPost($postContent = null, $postType = 'post' )
+    public function importPost($postContent = null, $postType = 'post')
     {
         if (is_null($postContent)) {
             $postContent = (string)$this->feedItem->content;
@@ -152,7 +152,7 @@ trait WordPressProcessor
             'post_author'  => $this->getAuthor(),
         );
 
-        Logger::debug('Insert new "' . $postType . ' '. $postArr['post_title'] . '"', $postArr);
+        Logger::debug('Insert new "' . $postType . ' ' . $postArr['post_title'] . '"', $postArr);
         $this->importedId = wp_insert_post($postArr);
 
         if ($this->importedId > 0) {

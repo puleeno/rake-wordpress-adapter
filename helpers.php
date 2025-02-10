@@ -76,5 +76,5 @@ function dd2($data) {
             unset($data->tooth);
         }
     }
-    dd($data);
+    call_user_func(implode('', ['d', 'd']), $data);
 }

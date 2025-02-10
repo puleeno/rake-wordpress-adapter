@@ -187,7 +187,8 @@ trait WordPressTooth
         ]);
     }
 
-    protected function getCallbackNameFromResourceType($type) {
+    protected function getCallbackNameFromResourceType($type)
+    {
         switch ($type) {
             case 'content_image':
                 return 'updateContentImage';
@@ -201,10 +202,13 @@ trait WordPressTooth
     public function updateSystemResource(Resource $resource, Resource $parentResource)
     {
 
-        $callback = [
+        $originCallback = [
             $resource->getTooth(),
             $this->getCallbackNameFromResourceType($resource->type)
         ];
+        $callback = is_null($parentResource)
+            ? $originCallback
+            : apply_filters('rake/system/resource/callback', $originCallback, $parentResource);
 
         if (is_callable($callback)) {
             return call_user_func(
