@@ -2,11 +2,10 @@
 
 namespace Puleeno\Rake\WordPress\Traits;
 
-use Alley\WP\Block_Converter\Block_Converter;
 use Throwable;
 use Exception;
 use Psr\Http\Message\StreamInterface;
-use Http\Client\Exception\RequestException;
+use Psr\Http\Client\RequestExceptionInterface;
 use Automattic\WooCommerce\Internal\Admin\CategoryLookup;
 use Ramphor\Rake\Resource;
 use Ramphor\Rake\Facades\Request;
@@ -151,8 +150,10 @@ trait WordPressTooth
                 'from' => $parentResource ? $parentResource->guid : '',
                 'mime_type' => isset($meta['uri']) ? mime_content_type($meta['uri']) : 'unknown',
             ), true)), (array)$resource);
-            if ($e instanceof RequestException && is_callable([$e, 'getResponse'])) {
-                $response = $e->getResponse();
+            if ($e instanceof RequestExceptionInterface && is_callable([$e, 'getResponse'])) {
+                $response = method_exists($e, 'getResponse')
+                    ? call_user_func([$e, 'getResponse'])
+                    : null;
                 if ($response->getStatusCode() < 500) {
                     $resource->skip();
                 }
