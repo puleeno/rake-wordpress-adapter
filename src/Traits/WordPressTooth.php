@@ -174,7 +174,7 @@ trait WordPressTooth
             return false;
         }
 
-        return $post->post_type = trim($postType);
+        return $post->post_type == trim($postType);
     }
 
     public function updatePostResource(Resource $resource)
