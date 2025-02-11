@@ -78,3 +78,10 @@ function dd2($data) {
     }
     call_user_func(implode('', ['d', 'd']), $data);
 }
+
+add_filter('crawlflow/data/taxonomy/type', function ($dataType, $parent) {
+    if ($parent->newType === 'product_category') {
+        return 'product_cat';
+    }
+    return $dataType;
+}, 10, 2);

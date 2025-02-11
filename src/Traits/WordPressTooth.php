@@ -221,7 +221,36 @@ trait WordPressTooth
         }
     }
 
+
     public function updateContentImage(Resource $parent, $attachmentId, $oldUrl)
+    {
+        $dataType = $parent->newType;
+        $dataTypeMaps = [
+            'post' => 'post',
+            'product' => 'post',
+            'product_category' => 'taxonomy',
+            'page' => 'post',
+            'category' => 'taxonomy',
+            'tag' => 'taxonomy',
+        ];
+
+        $originDataType = apply_filters(
+            'crawlflow/data/type',
+            array_get($dataTypeMaps, $dataType),
+            $dataType,
+            $parent
+        );
+
+        if ($originDataType === 'post') {
+            return $this->updatePostContentOfImage($parent, $attachmentId, $oldUrl);
+        }
+        if ($originDataType === 'taxonomy') {
+            return $this->updateTermContentOfImage($parent, $attachmentId, $oldUrl);
+        }
+        Logger::warning(sprintf('The data type %s is not supported', $dataType), [$parent]);
+    }
+
+    protected function updatePostContentOfImage(Resource $parent, $attachmentId, $oldUrl)
     {
         $document = new Document();
         $postId   = $parent->newGuid;
@@ -272,6 +301,62 @@ trait WordPressTooth
             'ID' => $postId,
             'post_type' => $postType,
             'post_content' => $newContent,
+        ]);
+    }
+
+
+    protected function updateTermContentOfImage(Resource $parent, $attachmentId, $oldUrl)
+    {
+        $termId = $parent->newGuid;
+        $termName = apply_filters(
+            'crawlflow/data/taxonomy/type',
+            $parent->newType,
+            $parent
+        );
+
+        $term = get_term($termId, $termName);
+        if (is_null($term)) {
+            Logger::warning(sprintf('The term has ID %d is not found', $termId), [$parent]);
+            return;
+        }
+
+        $document = new Document();
+        try {
+            $document->loadStr($term->description);
+        } catch (Throwable $e) {
+            // Override document content with empty string
+            $document->loadStr('');
+
+            Logger::warning($e->getMessage(), $term->to_array());
+        }
+
+        $images   = $document->find('img[src=' . $oldUrl . ']');
+        foreach ($images as $image) {
+            $imageUrl = wp_get_attachment_url($attachmentId);
+            if ($imageUrl === false) {
+                Logger::warning(sprintf(
+                    'Attachment #%d is not exists so this image(%s) will be removed',
+                    $attachmentId,
+                    $oldUrl
+                ));
+                $image->delete();
+                continue;
+            }
+            $image->setAttribute('src', $imageUrl);
+
+            Logger::debug(sprintf('The image(%s) is replaced by new URL %s', $oldUrl, $imageUrl));
+        }
+
+
+        $newContent = $document->innerHtml;
+
+        // update content of resource
+        $parent->setContent($newContent);
+        $parent->save();
+
+        // update description of term
+        return wp_update_term($termId, $termName, [
+            'description' => $newContent,
         ]);
     }
 
