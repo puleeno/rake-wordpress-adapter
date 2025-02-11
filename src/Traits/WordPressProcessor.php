@@ -176,8 +176,13 @@ trait WordPressProcessor
 
     public function importPage($title = null, $pageContent = null)
     {
-        $pageContent = empty($pageContent) ? (string)$this->feedItem->content : $pageContent;
+        $content = empty($pageContent) ? (string)$this->feedItem->content : $pageContent;
         $pageTitle = empty($title) ? $this->feedItem->title : $title;
+
+        // To compatible with download images feature.
+        if (!empty($pageContent)) {
+            $this->feedItem->setProperty('content', $content);
+        }
 
         $originalId       = $this->feedItem->originalId;
         $this->importedId = $this->checkIsExists(
@@ -198,7 +203,7 @@ trait WordPressProcessor
         $postArr = [
             'post_type'    => 'page',
             'post_title'   => $pageTitle,
-            'post_content' => $this->cleanupContentBeforeImport($pageContent),
+            'post_content' => $this->cleanupContentBeforeImport($content),
             'post_status'  => $postStatus,
             'post_author'  => $this->getAuthor(),
         ];
