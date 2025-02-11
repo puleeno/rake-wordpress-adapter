@@ -225,14 +225,14 @@ trait WordPressTooth
     public function updateContentImage(Resource $parent, $attachmentId, $oldUrl)
     {
         $dataType = $parent->newType;
-        $dataTypeMaps = [
+        $dataTypeMaps = apply_filters('crawlflow/data/type/maps', [
             'post' => 'post',
             'product' => 'post',
             'product_category' => 'taxonomy',
             'page' => 'post',
             'category' => 'taxonomy',
             'tag' => 'taxonomy',
-        ];
+        ]);
 
         $originDataType = apply_filters(
             'crawlflow/data/type',
