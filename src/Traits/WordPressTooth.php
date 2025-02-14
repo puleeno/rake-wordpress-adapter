@@ -224,27 +224,11 @@ trait WordPressTooth
 
     public function updateContentImage(Resource $parent, $attachmentId, $oldUrl)
     {
-        $dataType = $parent->newType;
-        $dataTypeMaps = apply_filters('crawlflow/data/type/maps', [
-            'post' => 'post',
-            'product' => 'post',
-            'product_category' => 'taxonomy',
-            'page' => 'post',
-            'category' => 'taxonomy',
-            'tag' => 'taxonomy',
-        ]);
-
-        $originDataType = apply_filters(
-            'crawlflow/data/type',
-            array_get($dataTypeMaps, $dataType),
-            $dataType,
-            $parent
-        );
-
-        if ($originDataType === 'post') {
+        $dataType = crawlflow_get_wordpress_builtin_data_type($parent->newType, $parent);
+        if ($dataType === 'post') {
             return $this->updatePostContentOfImage($parent, $attachmentId, $oldUrl);
         }
-        if ($originDataType === 'taxonomy') {
+        if ($dataType === 'taxonomy') {
             return $this->updateTermContentOfImage($parent, $attachmentId, $oldUrl);
         }
         Logger::warning(sprintf('The data type %s is not supported', $dataType), [$parent]);

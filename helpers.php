@@ -85,3 +85,24 @@ add_filter('crawlflow/data/taxonomy/type', function ($dataType, $parent) {
     }
     return $dataType;
 }, 10, 2);
+
+
+function crawlflow_get_wordpress_builtin_data_type($dataType, $parent = null) {
+    $dataTypeMaps = apply_filters('crawlflow/data/type/maps', [
+        'post' => 'post',
+        'product' => 'post',
+        'product_category' => 'taxonomy',
+        'page' => 'post',
+        'category' => 'taxonomy',
+        'tag' => 'taxonomy',
+    ]);
+
+    $builtInDataType = apply_filters(
+        'crawlflow/data/type',
+        array_get($dataTypeMaps, $dataType, $dataType),
+        $dataType,
+        $parent
+    );
+
+    return $builtInDataType;
+}
