@@ -1,4 +1,5 @@
 <?php
+
 use Ramphor\Rake\Facades\Request;
 use Ramphor\Rake\Facades\Logger;
 
@@ -58,14 +59,16 @@ function pl_convert_mime_type_to_extension($mime)
 }
 
 
-function pl_get_post_category_short_description_meta_name() {
+function pl_get_post_category_short_description_meta_name()
+{
     return apply_filters(
         'rake/post/category/short_description_meta_name',
         'short_description'
     );
 }
 
-function dd2($data) {
+function dd2($data)
+{
     if (is_array($data)) {
         if (isset($data['tooth'])) {
             unset($data['tooth']);
@@ -79,15 +82,26 @@ function dd2($data) {
     call_user_func(implode('', ['d', 'd']), $data);
 }
 
-add_filter('crawlflow/data/taxonomy/type', function ($dataType, $parent) {
-    if ($parent->newType === 'product_category') {
+add_filter('crawlflow/data/taxonomy/type', function ($dataType, $parent = null) {
+    if ($dataType === 'product_category') {
         return 'product_cat';
     }
     return $dataType;
 }, 10, 2);
 
 
-function crawlflow_get_wordpress_builtin_data_type($dataType, $parent = null) {
+function crawlflow_get_wordpress_taxonomy_name($type, $parent = null)
+{
+    return apply_filters(
+        'crawlflow/data/taxonomy/type',
+        $type,
+        $parent
+    );
+}
+
+
+function crawlflow_get_wordpress_builtin_data_type($dataType, $parent = null)
+{
     $dataTypeMaps = apply_filters('crawlflow/data/type/maps', [
         'post' => 'post',
         'product' => 'post',

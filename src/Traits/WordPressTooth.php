@@ -17,9 +17,9 @@ use function media_handle_sideload;
 
 trait WordPressTooth
 {
-    protected $resourceType                  = 'attachment';
+    protected $resourceType = 'attachment';
     protected $maxRetryDownloadResourceTimes = 10;
-    protected $usePostTitleAsImageFileName   = false;
+    protected $usePostTitleAsImageFileName = false;
 
     public function wordpressBootstrap()
     {
@@ -51,7 +51,7 @@ trait WordPressTooth
 
     protected function generateFileName($url, $realFile, $postTitle = null)
     {
-        $fileName  = basename($url);
+        $fileName = basename($url);
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
 
         if (strpos($fileName, '%') !== false) {
@@ -70,7 +70,7 @@ trait WordPressTooth
             return sprintf('%s.%s', $fileNameWithoutExtension, $extension);
         }
 
-        $mime         = mime_content_type($realFile);
+        $mime = mime_content_type($realFile);
         $newExtension = pl_convert_mime_type_to_extension($mime);
 
         return sprintf('%s%s', $fileNameWithoutExtension, $newExtension);
@@ -83,38 +83,39 @@ trait WordPressTooth
         $parentResource = null;
 
         try {
-            $tempFile   = tmpfile();
-            $response   = Request::sendRequest(
+            $tempFile = tmpfile();
+            $response = Request::sendRequest(
                 'GET',
                 $resource->guid,
                 apply_filters(
                     'rake_wordpress_download_image_request_options',
-                    array( 'verify' => false
+                    array(
+                        'verify' => false
                     )
                 )
             );
-            $stream     = $response->getBody();
+            $stream = $response->getBody();
             if ($stream instanceof StreamInterface && $stream->isWritable()) {
                 fwrite($tempFile, $stream);
             } else {
                 throw new Exception("data is not file or is not writeable");
             }
 
-            $meta           = stream_get_meta_data($tempFile);
-            $hashFile       = Resources::generateHash($meta['uri'], $resource->type);
-            $newType        = $this->resolveNewResourceType($resource);
-            $newGuid        = null;
+            $meta = stream_get_meta_data($tempFile);
+            $hashFile = Resources::generateHash($meta['uri'], $resource->type);
+            $newType = $this->resolveNewResourceType($resource);
+            $newGuid = null;
             $existsResource = Resources::getFromHash($hashFile, $newType);
             if (is_null($existsResource)) {
                 $parentResource = Resources::findParent($resource->id);
-                $postId         = is_null($parentResource) ? 0 : (int)$parentResource->newGuid;
-                $postTitle      = $this->usePostTitleAsImageFileName() ? get_the_title($postId) : null;
+                $postId = is_null($parentResource) ? 0 : (int) $parentResource->newGuid;
+                $postTitle = $this->usePostTitleAsImageFileName() ? get_the_title($postId) : null;
 
                 $file_array = array(
-                    'name'     => $this->generateFileName($resource->guid, $meta['uri'], $postTitle),
+                    'name' => $this->generateFileName($resource->guid, $meta['uri'], $postTitle),
                     'tmp_name' => $meta['uri']
                 );
-                $newGuid        = media_handle_sideload($file_array, $postId);
+                $newGuid = media_handle_sideload($file_array, $postId);
 
                 if (is_wp_error($newGuid)) {
                     // Logging in the catch block
@@ -149,7 +150,7 @@ trait WordPressTooth
                 'url' => $resource->guid,
                 'from' => $parentResource ? $parentResource->guid : '',
                 'mime_type' => isset($meta['uri']) ? mime_content_type($meta['uri']) : 'unknown',
-            ), true)), (array)$resource);
+            ), true)), (array) $resource);
             if ($e instanceof RequestExceptionInterface && is_callable([$e, 'getResponse'])) {
                 $response = method_exists($e, 'getResponse')
                     ? call_user_func([$e, 'getResponse'])
@@ -237,9 +238,9 @@ trait WordPressTooth
     protected function updatePostContentOfImage(Resource $parent, $attachmentId, $oldUrl)
     {
         $document = new Document();
-        $postId   = $parent->newGuid;
+        $postId = $parent->newGuid;
         $postType = $parent->newType;
-        $post     = get_post($postId);
+        $post = get_post($postId);
         if (is_null($post)) {
             Logger::warning(sprintf('The post has ID %d is not found', $postId), [
                 'post_id' => $parent->newGuid,
@@ -257,7 +258,7 @@ trait WordPressTooth
             Logger::warning($e->getMessage(), $post->to_array());
         }
 
-        $images   = $document->find('img[src=' . $oldUrl . ']');
+        $images = $document->find('img[src=' . $oldUrl . ']');
         foreach ($images as $image) {
             $imageUrl = wp_get_attachment_url($attachmentId);
             if ($imageUrl === false) {
@@ -292,8 +293,7 @@ trait WordPressTooth
     protected function updateTermContentOfImage(Resource $parent, $attachmentId, $oldUrl)
     {
         $termId = $parent->newGuid;
-        $termName = apply_filters(
-            'crawlflow/data/taxonomy/type',
+        $termName = crawlflow_get_wordpress_taxonomy_name(
             $parent->newType,
             $parent
         );
@@ -314,7 +314,7 @@ trait WordPressTooth
             Logger::warning($e->getMessage(), $term->to_array());
         }
 
-        $images   = $document->find('img[src=' . $oldUrl . ']');
+        $images = $document->find('img[src=' . $oldUrl . ']');
         foreach ($images as $image) {
             $imageUrl = wp_get_attachment_url($attachmentId);
             if ($imageUrl === false) {
@@ -377,7 +377,7 @@ trait WordPressTooth
 
     public function updateGalleryImage(Resource $postResource, $attachmentId)
     {
-        $postId   = $postResource->newGuid;
+        $postId = $postResource->newGuid;
         $postType = $this->getDataType($postResource);
 
         if ($postType === 'product') {
@@ -390,7 +390,7 @@ trait WordPressTooth
                 return;
             }
 
-            $galleryImages   = explode(',', get_post_meta($postId, '_product_image_gallery', true));
+            $galleryImages = explode(',', get_post_meta($postId, '_product_image_gallery', true));
 
             // Push gallery image to list if not exists.
             if (!in_array($attachmentId, $galleryImages)) {
