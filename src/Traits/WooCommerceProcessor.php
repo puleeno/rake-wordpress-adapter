@@ -95,6 +95,13 @@ trait WooCommerceProcessor
         }
         $product->set_regular_price($productPrice);
 
+
+        // Sale price
+        $productSalePrice  = intval($this->feedItem->productSalePrice);
+        if ($productSalePrice > 0) {
+            $product->set_sale_price($productSalePrice);
+        }
+
         $this->importedId = $product->save();
 
         if ($this->importedId > 0) {
@@ -291,6 +298,7 @@ trait WooCommerceProcessor
         }
         $attributes = (array)$product->get_attributes();
         $attributeTerms = array();
+
         foreach ($productAttributes as $attribute => $attributeValue) {
             $attributeType    = is_array($attributeValue) ? 'select' : 'custom';
             $productAttribute = ($attributeType === 'select') ? sprintf('pa_%s', $attribute) : wc_sanitize_taxonomy_name($attribute);
