@@ -4,6 +4,8 @@ namespace Puleeno\Rake\WordPress\Traits;
 
 use Puleeno\Rake\WordPress\SeoImporter;
 use Ramphor\Rake\Facades\Logger;
+use WPSEO_Taxonomy_Meta;
+use Yoast\WP\SEO\Integrations\Watchers\Indexable_Term_Watcher;
 
 trait WordPressProcessor
 {
@@ -53,7 +55,7 @@ trait WordPressProcessor
         $exists = $wpdb->get_var($sql);
         Logger::debug(sprintf('Check %s has title "%s" is exists: %s', $postType, $postTitle, $exists));
 
-        return (int)$exists;
+        return (int) $exists;
     }
 
     public function convertPostStatus($postStatus)
@@ -71,7 +73,7 @@ trait WordPressProcessor
 
     public function getAuthor()
     {
-        $author   = $this->feedItem->getMeta('author', null);
+        $author = $this->feedItem->getMeta('author', null);
         $authorId = apply_filters('rake_pre_get_feed_author', null);
         if (!is_null($authorId)) {
             return $authorId;
@@ -87,9 +89,9 @@ trait WordPressProcessor
     public function importPost($postContent = null, $postType = 'post')
     {
         if (is_null($postContent)) {
-            $postContent = (string)$this->feedItem->content;
+            $postContent = (string) $this->feedItem->content;
         } else {
-            $postContent = (string)$postContent;
+            $postContent = (string) $postContent;
         }
 
         $postContent = $this->cleanupContentBeforeImport($postContent);
@@ -100,7 +102,7 @@ trait WordPressProcessor
             $postContent
         );
 
-        $originalId       = $this->feedItem->originalId;
+        $originalId = $this->feedItem->originalId;
         $this->importedId = $this->checkIsExists(
             $this->feedItem->title,
             $originalId,
@@ -109,7 +111,7 @@ trait WordPressProcessor
 
         // Create the post attributes to import or update
         $postArr = array(
-            'post_type'    => $postType,
+            'post_type' => $postType,
         );
 
         if ($this->feedItem->slug) {
@@ -145,11 +147,11 @@ trait WordPressProcessor
         }
 
         $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
-        $postArr    = $postArr + array(
-            'post_title'   => $this->feedItem->title,
+        $postArr = $postArr + array(
+            'post_title' => $this->feedItem->title,
             'post_content' => $postContent, // this is cleanup content.
-            'post_status'  => $postStatus,
-            'post_author'  => $this->getAuthor(),
+            'post_status' => $postStatus,
+            'post_author' => $this->getAuthor(),
         );
 
         Logger::debug('Insert new "' . $postType . ' ' . $postArr['post_title'] . '"', $postArr);
@@ -176,7 +178,7 @@ trait WordPressProcessor
 
     public function importPage($title = null, $pageContent = null)
     {
-        $content = empty($pageContent) ? (string)$this->feedItem->content : $pageContent;
+        $content = empty($pageContent) ? (string) $this->feedItem->content : $pageContent;
         $pageTitle = empty($title) ? $this->feedItem->title : $title;
 
         // To compatible with download images feature.
@@ -184,7 +186,7 @@ trait WordPressProcessor
             $this->feedItem->setProperty('content', $content);
         }
 
-        $originalId       = $this->feedItem->originalId;
+        $originalId = $this->feedItem->originalId;
         $this->importedId = $this->checkIsExists(
             $pageTitle,
             $originalId,
@@ -201,17 +203,17 @@ trait WordPressProcessor
 
         $postStatus = $this->convertPostStatus($this->feedItem->getMeta('post_status', 'publish'));
         $postArr = [
-            'post_type'    => 'page',
-            'post_title'   => $pageTitle,
+            'post_type' => 'page',
+            'post_title' => $pageTitle,
             'post_content' => $this->cleanupContentBeforeImport($content),
-            'post_status'  => $postStatus,
-            'post_author'  => $this->getAuthor(),
+            'post_status' => $postStatus,
+            'post_author' => $this->getAuthor(),
         ];
 
         // Check existing page by slug or title
         $query_args = [
-            'post_type'      => 'page',
-            'post_status'    => 'publish',
+            'post_type' => 'page',
+            'post_status' => 'publish',
             'posts_per_page' => 1,
         ];
 
@@ -242,13 +244,13 @@ trait WordPressProcessor
     {
         if (is_null($postId)) {
             if (empty($this->importedId)) {
-                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
+                Logger::warning('The post ID is not set value. Please set it before import categories', (array) $this->feedItem);
                 return;
             }
             $postId = $this->importedId;
         }
 
-        $termIds  = [];
+        $termIds = [];
         $parentId = 0;
         if (is_array($categories)) {
             // Remove the categories with empty names;
@@ -256,9 +258,9 @@ trait WordPressProcessor
 
             foreach ($categories as $category) {
                 $category = trim($category);
-                $term     = term_exists($category, $taxonomy, $parentId);
+                $term = term_exists($category, $taxonomy, $parentId);
                 if (!is_null($term)) {
-                    $termId    = (int)$term['term_id'];
+                    $termId = (int) $term['term_id'];
                     $termIds[] = $termId;
                     if ($isNested) {
                         if ($parentId > 0) {
@@ -285,7 +287,7 @@ trait WordPressProcessor
                     continue;
                 }
 
-                $termId    = (int)$term['term_id'];
+                $termId = (int) $term['term_id'];
                 $termIds[] = $termId;
                 if ($isNested) {
                     $parentId = $termId;
@@ -304,7 +306,7 @@ trait WordPressProcessor
     {
         if (is_null($postId)) {
             if (empty($this->importedId)) {
-                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
+                Logger::warning('The post ID is not set value. Please set it before import categories', (array) $this->feedItem);
                 return;
             }
             $postId = $this->importedId;
@@ -343,14 +345,33 @@ trait WordPressProcessor
             $termId = $this->importedId;
         }
         $importer = SeoImporter::instance();
+        foreach ($importer->getSeoPlugins() as $pluginName => $seoInfo) {
+            if ($pluginName !== 'yoast_seo') {
+                $importer->importTermSeoData(
+                    $seoInfo,
+                    $termId,
+                    $this->feedItem->getMeta('seoTitle', null),
+                    $this->feedItem->getMeta('seoDescription', null)
+                );
+            } else if (class_exists('WPSEO_Taxonomy_Meta')) {
+                // Cập nhật meta cho term
+                $meta = array(
+                    'wpseo_title' => $this->feedItem->getMeta('seoTitle', null),
+                    'wpseo_desc' => $this->feedItem->getMeta('seoDescription', null),
+                    'wpseo_focuskw' => '',
+                    'wpseo_noindex' => 'index', // Cho phép index
+                    'wpseo_canonical' => get_term_link($term), // URL canonical
+                );
 
-        $seoTitle = $this->feedItem->getMeta('seoTitle', null);
-        if (!empty($seoTitle)) {
-            $importer->importTermTitle($termId, $seoTitle);
-        }
-        $seoDescription = $this->feedItem->getMeta('seoDescription', null);
-        if (!empty($seoDescription)) {
-            $importer->importTermDescription($termId, $seoDescription);
+                // Sử dụng API của Yoast SEO để cập nhật meta
+                WPSEO_Taxonomy_Meta::set_values($termId, 'product_cat', $meta);
+
+                // Cập nhật lại indexable thông qua API của Yoast SEO
+                if (class_exists(Indexable_Term_Watcher::class)) {
+                    $container = \YoastSEO()->classes->get(Indexable_Term_Watcher::class);
+                    $container->build_indexable($termId);
+                }
+            }
         }
     }
 }

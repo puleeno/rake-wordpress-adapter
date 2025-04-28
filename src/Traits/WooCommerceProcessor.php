@@ -124,9 +124,11 @@ trait WooCommerceProcessor
 
         $termDesc = $this->cleanupContentBeforeImport($description);
 
+        $this->feedItem->setProperty('content', $termDesc);
+
         $categoryArgs = array(
             'name' => $name,
-            'description' => $termDesc,
+            'description' => $this->feedItem->content,
         );
 
         // Set slug value
@@ -147,7 +149,6 @@ trait WooCommerceProcessor
         }
 
         // set product category content to attribute `content` to download images and update content text to new URL.
-        $this->feedItem->setProperty('content', $termDesc);
 
         $this->importedId      = $term_taxonomy['term_id'];
         $this->importedNewType = 'product_cat';

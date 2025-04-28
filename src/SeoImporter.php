@@ -88,35 +88,49 @@ class SeoImporter
         }
     }
 
-    public function importTermTitle($termId, $seoTitle)
+    public function importTermSeoData($seoInfo, $termId, $seoTitle, $seoDescription)
     {
-        foreach ($this->seoPlugins as $seoInfo) {
-            if (!isset($seoInfo['metadata']) || !isset($seoInfo['fields'])) {
-                continue;
-            }
-            $fields = $seoInfo['fields'];
-            if (empty($fields['title'])) {
-                return false;
-            }
-            if ($seoInfo['metadata'] === 'postmeta') {
-                update_term_meta($termId, $fields['title'], $seoTitle);
-            }
+        if (!empty($seoTitle)) {
+            $this->importTermTitle($seoInfo, $termId, $seoTitle);
+        }
+        if (!empty($seoDescription)) {
+            $this->importTermTitle($seoInfo, $termId, $seoDescription);
         }
     }
 
-    public function importTermDescription($termId, $seoDescription)
+    public function importTermTitle($seoInfo, $termId, $seoTitle)
     {
-        foreach ($this->seoPlugins as $seoInfo) {
-            if (!isset($seoInfo['metadata']) || !isset($seoInfo['fields'])) {
-                continue;
-            }
-            $fields = $seoInfo['fields'];
-            if (empty($fields['description'])) {
-                return false;
-            }
-            if ($seoInfo['metadata'] === 'postmeta') {
-                update_term_meta($termId, $fields['description'], $seoDescription);
-            }
+        if (!isset($seoInfo['metadata']) || !isset($seoInfo['fields'])) {
+            return;
         }
+        $fields = $seoInfo['fields'];
+
+        if (empty($fields['title'])) {
+            return false;
+        }
+
+        if ($seoInfo['metadata'] === 'postmeta') {
+            update_term_meta($termId, $fields['title'], $seoTitle);
+        }
+    }
+
+    public function importTermDescription($seoInfo, $termId, $seoDescription)
+    {
+        if (!isset($seoInfo['metadata']) || !isset($seoInfo['fields'])) {
+            return;
+        }
+
+        $fields = $seoInfo['fields'];
+        if (empty($fields['description'])) {
+            return false;
+        }
+        if ($seoInfo['metadata'] === 'postmeta') {
+            update_term_meta($termId, $fields['description'], $seoDescription);
+        }
+    }
+
+    public function getSeoPlugins()
+    {
+        return $this->seoPlugins;
     }
 }
