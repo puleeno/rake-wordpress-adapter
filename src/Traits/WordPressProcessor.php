@@ -360,7 +360,7 @@ trait WordPressProcessor
                     'wpseo_desc' => $this->feedItem->getMeta('seoDescription', null),
                     'wpseo_focuskw' => '',
                     'wpseo_noindex' => 'index', // Cho phép index
-                    'wpseo_canonical' => get_term_link($term), // URL canonical
+                    'wpseo_canonical' => get_term_link($termId), // URL canonical
                 );
 
                 // Sử dụng API của Yoast SEO để cập nhật meta
