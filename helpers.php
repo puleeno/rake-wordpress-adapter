@@ -82,7 +82,7 @@ function dd2($data)
     call_user_func(implode('', ['d', 'd']), $data);
 }
 
-add_filter('crawlflow/data/taxonomy/type', function ($dataType, $parent = null) {
+add_filter('rake/wp/data/taxonomy/type', function ($dataType, $parent = null) {
     if ($dataType === 'product_category') {
         return 'product_cat';
     }
@@ -90,19 +90,19 @@ add_filter('crawlflow/data/taxonomy/type', function ($dataType, $parent = null) 
 }, 10, 2);
 
 
-function crawlflow_get_wordpress_taxonomy_name($type, $parent = null)
+function rake_wp_get_wordpress_taxonomy_name($type, $parent = null)
 {
     return apply_filters(
-        'crawlflow/data/taxonomy/type',
+        'rake/wp/data/taxonomy/type',
         $type,
         $parent
     );
 }
 
 
-function crawlflow_get_wordpress_builtin_data_type($dataType, $parent = null)
+function rake_wp_get_builtin_data_type($dataType, $parent = null)
 {
-    $dataTypeMaps = apply_filters('crawlflow/data/type/maps', [
+    $dataTypeMaps = apply_filters('rake/wp/data/type/maps', [
         'post' => 'post',
         'product' => 'post',
         'product_category' => 'taxonomy',
@@ -112,7 +112,7 @@ function crawlflow_get_wordpress_builtin_data_type($dataType, $parent = null)
     ]);
 
     $builtInDataType = apply_filters(
-        'crawlflow/data/type',
+        'rake/wp/data/type',
         array_get($dataTypeMaps, $dataType, $dataType),
         $dataType,
         $parent

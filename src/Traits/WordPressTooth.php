@@ -225,7 +225,7 @@ trait WordPressTooth
 
     public function updateContentImage(Resource $parent, $attachmentId, $oldUrl)
     {
-        $dataType = crawlflow_get_wordpress_builtin_data_type($parent->newType, $parent);
+        $dataType = rake_wp_get_builtin_data_type($parent->newType, $parent);
         if ($dataType === 'post') {
             return $this->updatePostContentOfImage($parent, $attachmentId, $oldUrl);
         }
@@ -259,6 +259,7 @@ trait WordPressTooth
         }
 
         $images = $document->find('img[src=' . $oldUrl . ']');
+
         foreach ($images as $image) {
             $imageUrl = wp_get_attachment_url($attachmentId);
             if ($imageUrl === false) {
@@ -293,7 +294,7 @@ trait WordPressTooth
     protected function updateTermContentOfImage(Resource $parent, $attachmentId, $oldUrl)
     {
         $termId = $parent->newGuid;
-        $termName = crawlflow_get_wordpress_taxonomy_name(
+        $termName = rake_wp_get_wordpress_taxonomy_name(
             $parent->newType,
             $parent
         );
