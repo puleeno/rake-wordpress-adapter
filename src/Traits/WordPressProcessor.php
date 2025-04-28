@@ -361,6 +361,8 @@ trait WordPressProcessor
                     'wpseo_focuskw' => '',
                     'wpseo_noindex' => 'index', // Cho phép index
                     'wpseo_canonical' => get_term_link($termId), // URL canonical
+                    'wpseo_opengraph-title' => $this->feedItem->getMeta('ogTitle', $this->feedItem->getMeta('seoTitle', null)), // Thêm Open Graph title
+                    'wpseo_opengraph-description' => $this->feedItem->getMeta('ogDescription', $this->feedItem->getMeta('seoDescription', null)), // Thêm Open Graph description
                 );
 
                 // Sử dụng API của Yoast SEO để cập nhật meta
