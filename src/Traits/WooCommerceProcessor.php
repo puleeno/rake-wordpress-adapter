@@ -226,7 +226,7 @@ trait WooCommerceProcessor
                     $categoryArgs['parent'] = $parentId;
                 }
 
-                Logger::debug(sprintf('Insert new product category: "%s"', $category), $categoryArgs);
+                Logger::info(sprintf('Insert new product category: "%s"', $category), $categoryArgs);
                 $term = wp_insert_term($category, 'product_cat', $categoryArgs);
                 if (is_wp_error($term)) {
                     Logger::warning($term->get_error_message(), $categoryArgs);

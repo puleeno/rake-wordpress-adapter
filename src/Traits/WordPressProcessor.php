@@ -154,7 +154,7 @@ trait WordPressProcessor
             'post_author' => $this->getAuthor(),
         );
 
-        Logger::debug('Insert new "' . $postType . ' ' . $postArr['post_title'] . '"', $postArr);
+        Logger::info('Insert new "' . $postType . ' ' . $postArr['post_title'] . '"', $postArr);
         $this->importedId = wp_insert_post($postArr);
 
         if ($this->importedId > 0) {
@@ -232,7 +232,7 @@ trait WordPressProcessor
             $this->importedId = wp_insert_post($postArr, true);
         }
 
-        Logger::debug(
+        Logger::info(
             (!empty($existing_page) ? 'Update' : 'Insert new') . ' page ' . $postArr['post_title'],
             $postArr
         );
@@ -280,7 +280,7 @@ trait WordPressProcessor
                     $categoryArgs['parent'] = $parentId;
                 }
 
-                Logger::debug(sprintf('Insert new post category: "%s"', $category), $categoryArgs);
+                Logger::info(sprintf('Insert new post category: "%s"', $category), $categoryArgs);
                 $term = wp_insert_term($category, $taxonomy, $categoryArgs);
                 if (is_wp_error($term)) {
                     Logger::warning($term->get_error_message(), $categoryArgs);

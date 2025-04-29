@@ -140,14 +140,6 @@ trait WordPressTooth
                     $existsResource->newType,
                     $existsResource->newGuid
                 ));
-
-                // create new resource f
-                $newResource = clone $resource;
-                $newResource->setId(null);
-
-
-                // create new resource
-                $resource = $newResource;
             }
 
             $resource->setNewType($newType);
@@ -302,14 +294,18 @@ trait WordPressTooth
     protected function updateTermContentOfImage(Resource $parent, $attachmentId, $oldUrl)
     {
         $termId = $parent->newGuid;
-        $termName = rake_wp_get_wordpress_taxonomy_name(
+        $taxonomy = rake_wp_get_wordpress_taxonomy_name(
             $parent->newType,
             $parent
         );
 
-        $term = get_term($termId, $termName);
+
+        $term = get_term($termId, $taxonomy);
         if (is_null($term)) {
             Logger::warning(sprintf('The term has ID %d is not found', $termId), [$parent]);
+            return;
+        } elseif (is_wp_error($term)) {
+            Logger::error($term->get_error_message(), [$term]);
             return;
         }
 
@@ -349,7 +345,7 @@ trait WordPressTooth
         $parent->save();
 
         // update description of term
-        return wp_update_term($termId, $termName, [
+        return wp_update_term($termId, $taxonomy, [
             'description' => $newContent,
         ]);
     }
