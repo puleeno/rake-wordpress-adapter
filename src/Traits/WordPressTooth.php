@@ -79,7 +79,7 @@ trait WordPressTooth
     public function downloadResource(Resource &$resource): Resource
     {
         $this->requireWordPressSupports();
-        Logger::debug(sprintf('Download the %s resource: %s', $resource->type, $resource->guid));
+        Logger::info(sprintf('Download the %s resource: %s', $resource->type, $resource->guid));
         $parentResource = null;
 
         try {
@@ -122,7 +122,7 @@ trait WordPressTooth
                     throw new Exception($newGuid->get_error_message());
                 }
                 $resource->saveHash($hashFile, $newType, $newGuid);
-                Logger::debug(sprintf(
+                Logger::info(sprintf(
                     'The image %s with hash %s is downloaded as %s(#%d)',
                     $resource->guid,
                     $hashFile,
@@ -140,6 +140,14 @@ trait WordPressTooth
                     $existsResource->newType,
                     $existsResource->newGuid
                 ));
+
+                // create new resource f
+                $newResource = clone $resource;
+                $newResource->setId(null);
+
+
+                // create new resource
+                $resource = $newResource;
             }
 
             $resource->setNewType($newType);
@@ -225,7 +233,7 @@ trait WordPressTooth
 
     public function updateContentImage(Resource $parent, $attachmentId, $oldUrl)
     {
-        $dataType = rake_wp_get_builtin_data_type($parent->newType, $parent);
+        $dataType = rake_wp_get_builtin_data_type($parent->newType, null);
         if ($dataType === 'post') {
             return $this->updatePostContentOfImage($parent, $attachmentId, $oldUrl);
         }
@@ -273,7 +281,7 @@ trait WordPressTooth
             }
             $image->setAttribute('src', $imageUrl);
 
-            Logger::debug(sprintf('The image(%s) is replaced by new URL %s', $oldUrl, $imageUrl));
+            Logger::info(sprintf('The image(%s) is replaced by new URL %s', $oldUrl, $imageUrl));
         }
 
 
@@ -315,9 +323,14 @@ trait WordPressTooth
             Logger::warning($e->getMessage(), $term->to_array());
         }
 
+
         $images = $document->find('img[src=' . $oldUrl . ']');
+        dd('zo', $oldUrl, $images);
+
         foreach ($images as $image) {
             $imageUrl = wp_get_attachment_url($attachmentId);
+        dd($oldUrl, $imageUrl);
+
             if ($imageUrl === false) {
                 Logger::warning(sprintf(
                     'Attachment #%d is not exists so this image(%s) will be removed',
@@ -329,7 +342,7 @@ trait WordPressTooth
             }
             $image->setAttribute('src', $imageUrl);
 
-            Logger::debug(sprintf('The image(%s) is replaced by new URL %s', $oldUrl, $imageUrl));
+            Logger::info(sprintf('The image(%s) is replaced by new URL %s', $oldUrl, $imageUrl));
         }
 
 
@@ -384,7 +397,7 @@ trait WordPressTooth
         if ($postType === 'product') {
             $postThumbnailId = get_post_thumbnail_id($postId);
             if ($postThumbnailId == $attachmentId) {
-                Logger::debug(sprintf(
+                Logger::info(sprintf(
                     'The thumbnail #%d is already exists as feature image so it is skipped add to gallery images',
                     $postThumbnailId
                 ));
@@ -397,7 +410,7 @@ trait WordPressTooth
             if (!in_array($attachmentId, $galleryImages)) {
                 $galleryImages[] = $attachmentId;
 
-                Logger::debug(sprintf('The attachment #%d is appended to product gallery', $attachmentId));
+                Logger::info(sprintf('The attachment #%d is appended to product gallery', $attachmentId));
                 return update_post_meta(
                     $postId,
                     '_product_image_gallery',
@@ -405,5 +418,16 @@ trait WordPressTooth
                 );
             }
         }
+    }
+
+
+    public function updateContentResource(?Resource $resource, ?Resource $parent = null) {
+        die('zo');
+        if (is_null($resource)) {
+            return;
+        }
+
+        $dataType = rake_wp_get_builtin_data_type($resource, $parent);
+        dd($dataType);
     }
 }
