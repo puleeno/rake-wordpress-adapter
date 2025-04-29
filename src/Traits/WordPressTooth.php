@@ -323,14 +323,10 @@ trait WordPressTooth
             Logger::warning($e->getMessage(), $term->to_array());
         }
 
-
         $images = $document->find('img[src=' . $oldUrl . ']');
-        dd('zo', $oldUrl, $images);
 
         foreach ($images as $image) {
             $imageUrl = wp_get_attachment_url($attachmentId);
-        dd($oldUrl, $imageUrl);
-
             if ($imageUrl === false) {
                 Logger::warning(sprintf(
                     'Attachment #%d is not exists so this image(%s) will be removed',
@@ -420,14 +416,15 @@ trait WordPressTooth
         }
     }
 
-
-    public function updateContentResource(?Resource $resource, ?Resource $parent = null) {
-        die('zo');
-        if (is_null($resource)) {
-            return;
+    // Support update <img> src after fix URL format
+    public function updateParentResourceContent($content, $newDataType, $newGuid)
+    {
+        $dataType = rake_wp_get_builtin_data_type($newDataType, null);
+        if ($dataType === 'taxonomy') {
+            $taxonomy = rake_wp_get_wordpress_taxonomy_name($newDataType, null);
+            wp_update_term($newGuid, $taxonomy, [
+                'description' => $content
+            ]);
         }
-
-        $dataType = rake_wp_get_builtin_data_type($resource, $parent);
-        dd($dataType);
     }
 }

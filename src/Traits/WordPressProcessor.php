@@ -353,7 +353,7 @@ trait WordPressProcessor
                     $this->feedItem->getMeta('seoTitle', null),
                     $this->feedItem->getMeta('seoDescription', null)
                 );
-            } else if (class_exists('WPSEO_Taxonomy_Meta')) {
+            } elseif (class_exists('WPSEO_Taxonomy_Meta')) {
                 // Cập nhật meta cho term
                 $meta = array(
                     'wpseo_title' => $this->feedItem->getMeta('seoTitle', null),
