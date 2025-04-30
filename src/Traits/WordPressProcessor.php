@@ -53,7 +53,7 @@ trait WordPressProcessor
             );
 
         $exists = $wpdb->get_var($sql);
-        Logger::debug(sprintf('Check %s has title "%s" is exists: %s', $postType, $postTitle, $exists));
+        Logger::info(sprintf('Check %s has title "%s" is exists: %s', $postType, $postTitle, $exists));
 
         return (int) $exists;
     }
@@ -127,7 +127,7 @@ trait WordPressProcessor
         }
 
         if ($this->importedId > 0) {
-            Logger::debug(sprintf('Found the %s %d so the process will continue with next step', $postType, $this->importedId));
+            Logger::info(sprintf('Found the %s %d so the process will continue with next step', $postType, $this->importedId));
             $postArr = array(
                 'ID' => $this->importedId,
             );

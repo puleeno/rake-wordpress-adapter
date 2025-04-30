@@ -20,7 +20,7 @@ abstract class WordPressProcessor extends Processor
         $galleryImages  = $this->feedItem->galleryImages;
         $totalGalleries = count($galleryImages);
 
-        Logger::debug(sprintf('The processor founded %d WordPress gallery', $totalGalleries));
+        Logger::info(sprintf('The processor founded %d WordPress gallery', $totalGalleries));
         if ($totalGalleries > 0) {
             foreach ($document->find('div.gallery[id^="gallery"]') as $gallery) {
                 $images     = [];
@@ -28,7 +28,7 @@ abstract class WordPressProcessor extends Processor
                 $classes    = $gallery->getAttribute('class');
                 $domImages  = $gallery->find('img');
 
-                Logger::debug('Found %d from the content', count($domImages));
+                Logger::info('Found %d from the content', count($domImages));
                 foreach ($domImages as $image) {
                     $parent = $image->getParent();
                     if ($parent->tag->name() === "a") {
@@ -79,7 +79,7 @@ abstract class WordPressProcessor extends Processor
                     implode(', ', $images),
                 ));
 
-                Logger::debug(sprintf(
+                Logger::info(sprintf(
                     'Convert HTML gallery %s to WordPress gallery %s',
                     $gallery->innertHtml,
                     $gallery_shortcode->innerHtml
