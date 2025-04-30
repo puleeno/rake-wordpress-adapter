@@ -96,7 +96,7 @@ trait WordPressTooth
             );
             $stream = $response->getBody();
             if ($stream instanceof StreamInterface && $stream->isWritable()) {
-                fwrite($tempFile, $stream);
+                fwrite($tempFile, $stream->getContents());
             } else {
                 throw new Exception("data is not file or is not writeable");
             }
@@ -169,14 +169,24 @@ trait WordPressTooth
         return $resource;
     }
 
-    public function validateSystemResource($postId, $postType): bool
+    public function validateSystemResource($importedId, $dataType): bool
     {
-        $post = get_post($postId);
-        if (is_null($post)) {
-            return false;
-        }
+        $builtInType = rake_wp_get_builtin_data_type($dataType, null);
+        $wpType = rake_wp_get_wordpress_taxonomy_name($dataType);
 
-        return $post->post_type == trim($postType);
+        switch($builtInType) {
+            case 'post':
+                $post = get_post($importedId);
+                if (is_null($post)) {
+                    return false;
+                }
+                return $post->post_type == trim( $dataType);
+            default:
+                break;
+        }
+        dd($dataType);
+
+        return true;
     }
 
     public function updatePostResource(Resource $resource)
@@ -300,7 +310,7 @@ trait WordPressTooth
 
         $term = get_term($termId, $taxonomy);
         if (is_null($term)) {
-            Logger::warning(sprintf('The term has ID %d is not found', $termId), [$parent]);
+            Logger::warning(sprintf('The term has ID #%d is not found', $termId), [$parent]);
             return;
         } elseif (is_wp_error($term)) {
             Logger::error($term->get_error_message(), [$term]);

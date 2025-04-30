@@ -109,6 +109,7 @@ function rake_wp_get_builtin_data_type($dataType, $parent = null)
         'page' => 'post',
         'category' => 'taxonomy',
         'tag' => 'taxonomy',
+        'attachment' => 'post'
     ]);
 
     $builtInDataType = apply_filters(
