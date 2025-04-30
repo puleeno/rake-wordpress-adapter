@@ -202,7 +202,6 @@ trait WordPressTooth
 
     public function updateSystemResource(Resource $resource, Resource $parentResource)
     {
-
         $originCallback = [
             $resource->getTooth(),
             $this->getCallbackNameFromResourceType($resource->type)
@@ -299,7 +298,6 @@ trait WordPressTooth
             $parent
         );
 
-
         $term = get_term($termId, $taxonomy);
         if (is_null($term)) {
             Logger::warning(sprintf('The term has ID %d is not found', $termId), [$parent]);
@@ -336,7 +334,6 @@ trait WordPressTooth
 
             Logger::info(sprintf('The image(%s) is replaced by new URL %s', $oldUrl, $imageUrl));
         }
-
 
         $newContent = $document->innerHtml;
 
