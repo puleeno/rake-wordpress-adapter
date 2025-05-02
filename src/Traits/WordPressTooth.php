@@ -174,13 +174,13 @@ trait WordPressTooth
         $builtInType = rake_wp_get_builtin_data_type($dataType, null);
         $wpType = rake_wp_get_wordpress_taxonomy_name($dataType);
 
-        switch($builtInType) {
+        switch ($builtInType) {
             case 'post':
                 $post = get_post($importedId);
                 if (is_null($post)) {
                     return false;
                 }
-                return $post->post_type == trim( $dataType);
+                return $post->post_type == trim($dataType);
             default:
                 break;
         }
@@ -268,6 +268,7 @@ trait WordPressTooth
         }
 
         $images = $document->find('img[src=' . $oldUrl . ']');
+        Logger::info(sprintf('Found %s images by old URL "%s"', count($images), $oldUrl));
 
         foreach ($images as $image) {
             $imageUrl = wp_get_attachment_url($attachmentId);
@@ -425,9 +426,19 @@ trait WordPressTooth
         $dataType = rake_wp_get_builtin_data_type($newDataType, null);
         if ($dataType === 'taxonomy') {
             $taxonomy = rake_wp_get_wordpress_taxonomy_name($newDataType, null);
+            Logger::info(sprintf('Update [%s] description to resource downloader can update image link after download', $taxonomy));
             wp_update_term($newGuid, $taxonomy, [
                 'description' => $content
             ]);
+        } elseif ($dataType === 'post') {
+            $postType = rake_wp_get_wordpress_post_type($newDataType, null);
+            Logger::info(sprintf('Update [%s] content to resource downloader can update image link after download', $postType));
+            wp_update_post([
+                'ID' => $newGuid,
+                'post_content' => $content
+            ]);
+        } else {
+            Logger::warning(sprintf('Data type [%s] is not support update parent resource content'));
         }
     }
 }

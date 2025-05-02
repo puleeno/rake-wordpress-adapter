@@ -99,6 +99,14 @@ function rake_wp_get_wordpress_taxonomy_name($type, $parent = null)
     );
 }
 
+function rake_wp_get_wordpress_post_type($type, $parent = null)
+{
+    return apply_filters(
+        'rake/wp/data/post/type',
+        $type,
+        $parent
+    );
+}
 
 function rake_wp_get_builtin_data_type($dataType, $parent = null)
 {
