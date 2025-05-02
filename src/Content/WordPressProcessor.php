@@ -28,7 +28,7 @@ abstract class WordPressProcessor extends Processor
                 $classes    = $gallery->getAttribute('class');
                 $domImages  = $gallery->find('img');
 
-                Logger::info('Found %d from the content', count($domImages));
+                Logger::info(sprintf('Found %d from the content', count($domImages)));
                 foreach ($domImages as $image) {
                     $parent = $image->getParent();
                     if ($parent->tag->name() === "a") {
