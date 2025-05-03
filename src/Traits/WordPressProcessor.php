@@ -4,6 +4,7 @@ namespace Puleeno\Rake\WordPress\Traits;
 
 use Puleeno\Rake\WordPress\SeoImporter;
 use Ramphor\Rake\Facades\Logger;
+use WP_Term;
 use WPSEO_Taxonomy_Meta;
 use Yoast\WP\SEO\Integrations\Watchers\Indexable_Term_Watcher;
 
@@ -242,6 +243,79 @@ trait WordPressProcessor
         return $this->importedId;
     }
 
+    protected function checkTermExistsBySlugAndTaxonomy($slug, $taxonomy)
+    {
+        $term = get_term_by('slug', $slug, $taxonomy);
+        if ($term instanceof WP_Term) {
+            return $term->term_id;
+        }
+        return 0;
+    }
+
+    protected function checkTermExistsByNameAndTaxonomy($name, $taxonomy)
+    {
+        $term = get_term_by('name', $name, $taxonomy);
+        if ($term instanceof WP_Term) {
+            return $term->term_id;
+        }
+        return 0;
+    }
+
+    public function importPostCategory($title = null, $description = null, $slug = null, $shortDescription = null, $taxonomy = 'category')
+    {
+        $title = !is_null($title) ? trim($title) : trim($this->feedItem->title);
+        $slug = !is_null($slug) ? $slug : $this->feedItem->slug;
+        $description = !is_null($description) ? $description : $this->feedItem->description;
+        $taxonomy = !empty($taxonomy) ? $taxonomy : $this->feedItem->taxonomy;
+
+        $termId = !empty($slug) ? $this->checkTermExistsBySlugAndTaxonomy($slug, $taxonomy) : $this->checkTermExistsByNameAndTaxonomy($title, $taxonomy);
+        $args = array(
+            'description' => $description,
+            'slug' => $slug,
+        );
+        Logger::info(sprintf('Check term of [%s] is exists: %s', $taxonomy, $termId > 0 ? 'existing with Id #' . $termId : 'Not exists'));
+
+        if ($termId <= 0) {
+            Logger::info(sprintf('Create new %s with name is "%s"', $taxonomy, $title));
+            $term = wp_insert_term($title, $taxonomy, $args);
+            $termId = $term['term_id'];
+
+
+            if (is_wp_error($term)) {
+                Logger::warning($term->get_error_message(), array(
+                    'title' => $title,
+                    'slug' => $slug,
+                    'description' => $description,
+                    'taxonomy' => $taxonomy
+                ));
+                return false;
+            }
+        } else {
+            $updatePostCategoryHandle = apply_filters("rake/wp/{$taxonomy}/existing/update/handle", null, $title, $args);
+            if (is_callable($updatePostCategoryHandle)) {
+                call_user_func_array($updatePostCategoryHandle, [
+                    $termId,
+                    $title,
+                    $taxonomy,
+                    $args,
+                    $this
+                ]);
+            }
+        }
+
+        if (!empty($shortDescription)) {
+            update_term_meta(
+                $termId,
+                pl_get_post_category_short_description_meta_name(),
+                $shortDescription
+            );
+        }
+
+        $this->setImportedId($termId);
+
+        return $termId;
+    }
+
     public function importPostCategories($categories, $isNested = false, $postId = null, $taxonomy = 'category')
     {
         if (is_null($postId)) {
@@ -339,7 +413,7 @@ trait WordPressProcessor
         }
     }
 
-    public function importTermSeo($termId = null)
+    public function importTermSeo($termId = null, $taxonomy = 'category')
     {
         if (is_null($termId)) {
             if (empty($this->importedId)) {
@@ -358,6 +432,7 @@ trait WordPressProcessor
                     $this->feedItem->getMeta('seoDescription', null)
                 );
             } elseif (class_exists('WPSEO_Taxonomy_Meta')) {
+
                 // Cập nhật meta cho term
                 $meta = array(
                     'wpseo_title' => $this->feedItem->getMeta('seoTitle', null),
@@ -370,7 +445,7 @@ trait WordPressProcessor
                 );
 
                 // Sử dụng API của Yoast SEO để cập nhật meta
-                WPSEO_Taxonomy_Meta::set_values($termId, 'product_cat', $meta);
+                WPSEO_Taxonomy_Meta::set_values($termId, $taxonomy, $meta);
 
                 // Cập nhật lại indexable thông qua API của Yoast SEO
                 if (class_exists(Indexable_Term_Watcher::class)) {

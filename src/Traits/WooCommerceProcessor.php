@@ -412,37 +412,4 @@ trait WooCommerceProcessor
         $product->set_stock_status($status);
         $product->save();
     }
-
-
-    public function importPostCategory($title = null, $description = null, $slug = null, $shortDescription = null, $taxonomy = 'category')
-    {
-        $title = empty($title) ? $title : $this->feedItem->title;
-        $slug = empty($slug) ? $slug : $this->feedItem->slug;
-        $description = empty($description) ? $description : $this->feedItem->description;
-        $taxonomy = empty($taxonomy) ? $taxonomy : $this->feedItem->taxonomy;
-
-        $term = wp_insert_term($title, $taxonomy, array(
-            'description' => $description,
-            'slug' => $slug,
-        ));
-
-        if (is_wp_error($term)) {
-            Logger::warning($term->get_error_message(), array(
-                'title' => $title,
-                'slug' => $slug,
-                'description' => $description,
-                'taxonomy' => $taxonomy
-            ));
-            return false;
-        }
-
-        if (empty($shortDescription)) {
-            update_term_meta(
-                $term['term_id'],
-                pl_get_post_category_short_description_meta_name(),
-                $shortDescription
-            );
-        }
-        return $term['term_id'];
-    }
 }

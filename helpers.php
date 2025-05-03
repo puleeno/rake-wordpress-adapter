@@ -114,6 +114,7 @@ function rake_wp_get_builtin_data_type($dataType, $parent = null)
         'post' => 'post',
         'product' => 'post',
         'product_category' => 'taxonomy',
+        'product_tag' => 'taxonomy',
         'page' => 'post',
         'category' => 'taxonomy',
         'tag' => 'taxonomy',
