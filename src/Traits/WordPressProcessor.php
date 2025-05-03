@@ -293,6 +293,11 @@ trait WordPressProcessor
         } else {
             $updatePostCategoryHandle = apply_filters("rake/wp/{$taxonomy}/existing/update/handle", null, $title, $args);
             if (is_callable($updatePostCategoryHandle)) {
+                Logger::info(sprintf('Update [%s] #%d data via callback', $taxonomy, $termId), [
+                    $title,
+                    $args,
+                    $updatePostCategoryHandle
+                ]);
                 call_user_func_array($updatePostCategoryHandle, [
                     $termId,
                     $title,
@@ -300,6 +305,8 @@ trait WordPressProcessor
                     $args,
                     $this
                 ]);
+            } else {
+                Logger::info(sprintf('Data of [%s] #%d is skipped updating', $taxonomy, $termId));
             }
         }
 
@@ -432,7 +439,6 @@ trait WordPressProcessor
                     $this->feedItem->getMeta('seoDescription', null)
                 );
             } elseif (class_exists('WPSEO_Taxonomy_Meta')) {
-
                 // Cập nhật meta cho term
                 $meta = array(
                     'wpseo_title' => $this->feedItem->getMeta('seoTitle', null),
