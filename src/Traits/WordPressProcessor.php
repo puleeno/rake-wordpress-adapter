@@ -75,7 +75,7 @@ trait WordPressProcessor
     public function getAuthor()
     {
         $author = $this->feedItem->getMeta('author', null);
-        $authorId = apply_filters('rake_pre_get_feed_author', null);
+        $authorId = apply_filters('rake/wp/feed_author/pre', null);
         if (!is_null($authorId)) {
             return $authorId;
         }
@@ -84,7 +84,7 @@ trait WordPressProcessor
         if (!is_null($author)) {
             Logger::warning('The author import is not implemented');
         }
-        return apply_filters('rake_get_feed_author', $authorId);
+        return apply_filters('rake/wp/feed_author', $authorId);
     }
 
     public function importPost($postContent = null, $postType = 'post')
