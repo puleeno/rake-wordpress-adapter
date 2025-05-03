@@ -136,7 +136,7 @@ trait WordPressProcessor
             // Check update process is Ok
             if (
                 is_wp_error(wp_update_post(apply_filters(
-                    'rampho_rake_update_post_args',
+                    'rake/wp/post/update_args',
                     $postArr,
                     $this->feedItem,
                     $this, // Current processor
