@@ -54,7 +54,7 @@ trait WordPressProcessor
             );
 
         $exists = $wpdb->get_var($sql);
-        Logger::info(sprintf('Check %s has title "%s" is exists: %s', $postType, $postTitle, $exists));
+        Logger::info(sprintf('Check %s has title or not "%s" status: %s', $postType, $postTitle, $exists > 0 ? 'exists with ID #' . $exists : 'not exists'));
 
         return (int) $exists;
     }
