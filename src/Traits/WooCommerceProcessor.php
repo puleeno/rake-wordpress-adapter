@@ -120,9 +120,12 @@ trait WooCommerceProcessor
     {
         $name = empty($name) ? $this->feedItem->productCategoryName : $name;
         $description = empty($description) ? $this->feedItem->productCategoryDesc : $description;
+
         $term = term_exists($name, 'product_cat');
+        Logger::info(sprintf('Check product category status: ', empty($term) ? 'not exists' : 'existing'), $term);
 
         $termDesc = $this->cleanupContentBeforeImport($description);
+        Logger::info('Clean up product category description');
 
         $this->feedItem->setProperty('content', $termDesc);
 
@@ -139,8 +142,10 @@ trait WooCommerceProcessor
         }
 
         if ($term > 0) {
-            $term_taxonomy = wp_update_term($term, 'product_cat', $categoryArgs);
+            Logger::info(sprintf('Product category is already exist with ID #%s', $term['term_id']));
+            $term_taxonomy = wp_update_term($term['term_id'], 'product_cat', $categoryArgs);
         } else {
+            Logger::info(sprintf('Create new category', $term['term_id']));
             $term_taxonomy = wp_insert_term($name, 'product_cat', $categoryArgs);
         }
 
