@@ -438,7 +438,7 @@ trait WordPressTooth
                 'post_content' => $content
             ]);
         } else {
-            Logger::warning(sprintf('Data type [%s] is not support update parent resource content'));
+            Logger::warning(sprintf('Data type [%s] is not support update parent resource content', $newDataType));
         }
     }
 }
