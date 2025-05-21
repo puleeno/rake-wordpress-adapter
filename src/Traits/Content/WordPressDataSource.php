@@ -1,13 +1,12 @@
 <?php
 
-namespace Puleeno\Rake\WordPress\Content;
+namespace Puleeno\Rake\WordPress\Traits\Content;
 
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\TextNode;
-use Ramphor\Rake\Abstracts\Processor;
 use Ramphor\Rake\Facades\Logger;
 
-abstract class WordPressProcessor extends Processor
+trait WordPressDataSource
 {
     protected $tocPlugins = [
         'easy_table_of_content' => '#toc_container',
