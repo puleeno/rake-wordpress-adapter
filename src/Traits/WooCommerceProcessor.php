@@ -93,7 +93,9 @@ trait WooCommerceProcessor
         if ($this->feedItem->slug) {
             $product->set_slug($this->feedItem->slug);
         }
-        $product->set_regular_price($productPrice);
+        if ($productPrice > 0) {
+            $product->set_regular_price($productPrice);
+        }
 
 
         // Sale price
