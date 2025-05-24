@@ -120,14 +120,16 @@ trait WooCommerceProcessor
      */
     public function importProductCategory($name = null, $description = null, $slug = null)
     {
-        $name = empty($name) ? $this->feedItem->productCategoryName : $name;
+        $name = empty($name) ? $this->feedItem->title : $name;
         $description = empty($description) ? $this->feedItem->productCategoryDesc : $description;
 
         $term = term_exists($name, 'product_cat');
         Logger::info(sprintf('Check product category status: ', empty($term) ? 'not exists' : 'existing'), $term);
 
-        $termDesc = $this->cleanupContentBeforeImport($description);
-        Logger::info('Clean up product category description');
+        if (!empty($description)) {
+            $termDesc = $this->cleanupContentBeforeImport($description);
+            Logger::info('Clean up product category description');
+        }
 
         $this->feedItem->setProperty('content', $termDesc);
 
