@@ -192,7 +192,7 @@ trait WooCommerceProcessor
     {
         if (is_null($productId)) {
             if (empty($this->importedId)) {
-                Logger::warning('The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
+                Logger::warning( 'The post ID is not set value. Please set it before import categories', (array)$this->feedItem);
                 return;
             }
             $productId = $this->importedId;
