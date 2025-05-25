@@ -124,7 +124,7 @@ trait WooCommerceProcessor
         $description = empty($description) ? $this->feedItem->productCategoryDesc : $description;
 
         $term = term_exists($name, 'product_cat');
-        Logger::info(sprintf('Check product category status: ', empty($term) ? 'not exists' : 'existing'), $term);
+        Logger::info(sprintf('Check product category status: ', empty($term) ? 'not exists' : 'existing'), is_array($term) ? $term : [$term]);
 
         if (!empty($description)) {
             $termDesc = $this->cleanupContentBeforeImport($description);
