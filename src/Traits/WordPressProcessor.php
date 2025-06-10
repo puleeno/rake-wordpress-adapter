@@ -155,7 +155,7 @@ trait WordPressProcessor
             'post_author' => $this->getAuthor(),
         );
 
-        Logger::info('Insert new "' . $postType . ' ' . $postArr['post_title'] . '"');
+        Logger::info('Insert new ' . $postType . ' "' . $postArr['post_title'] . '"');
         Logger::debug('Data:', $postArr);
 
         $this->importedId = wp_insert_post($postArr);

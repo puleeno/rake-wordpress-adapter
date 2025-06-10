@@ -92,10 +92,18 @@ add_filter('rake/wp/data/taxonomy/type', function ($dataType, $parent = null) {
 
 function rake_wp_get_wordpress_taxonomy_name($type, $parent = null)
 {
+    $mapTypes = [
+        'post_category' => 'category'
+    ];
+    $realType = $type;
+    if (isset($mapTypes[$type])) {
+        $realType = $mapTypes[$type];
+    }
     return apply_filters(
         'rake/wp/data/taxonomy/type',
-        $type,
-        $parent
+        $realType,
+        $parent,
+        $type
     );
 }
 
@@ -117,6 +125,7 @@ function rake_wp_get_builtin_data_type($dataType, $parent = null)
         'product_tag' => 'taxonomy',
         'page' => 'post',
         'category' => 'taxonomy',
+        'post_category' => 'taxonomy',
         'tag' => 'taxonomy',
         'attachment' => 'attachment'
     ]);
