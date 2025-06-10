@@ -176,6 +176,7 @@ trait WordPressTooth
 
         switch ($builtInType) {
             case 'post':
+            case 'attachment':
                 $post = get_post($importedId);
                 if (is_null($post)) {
                     return false;
@@ -184,7 +185,6 @@ trait WordPressTooth
             default:
                 break;
         }
-        dd($dataType);
 
         return true;
     }
