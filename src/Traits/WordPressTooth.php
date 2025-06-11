@@ -76,7 +76,7 @@ trait WordPressTooth
         return sprintf('%s%s', $fileNameWithoutExtension, $newExtension);
     }
 
-    public function downloadResource(Resource &$resource): Resource
+    public function downloadResource(Resource &$resource): ? Resource
     {
         $this->requireWordPressSupports();
         Logger::info(sprintf('Download the %s resource: %s', $resource->type, $resource->guid));
