@@ -2,6 +2,10 @@
 
 namespace Puleeno\Rake\WordPress;
 
+if (!defined('ABSPATH')) {
+    exit('Cheatin huh?');
+}
+
 use Ramphor\Sql as SqlBuilder;
 use Ramphor\Rake\Abstracts\Driver as DriverAbstract;
 use Ramphor\Rake\Constracts\SQLQueryBuilder;

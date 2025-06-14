@@ -2,6 +2,10 @@
 
 namespace Puleeno\Rake\WordPress\Traits\Content;
 
+if (!defined('ABSPATH')) {
+    exit('Cheatin huh?');
+}
+
 use Ramphor\Rake\Facades\Logger;
 
 trait OpencartDataSource

@@ -2,6 +2,10 @@
 
 namespace Puleeno\Rake\WordPress;
 
+if (!defined('ABSPATH')) {
+    exit('Cheatin huh?');
+}
+
 class SeoImporter
 {
     protected static $instance;

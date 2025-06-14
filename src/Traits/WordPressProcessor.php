@@ -2,6 +2,10 @@
 
 namespace Puleeno\Rake\WordPress\Traits;
 
+if (!defined('ABSPATH')) {
+    exit('Cheatin huh?');
+}
+
 use Puleeno\Rake\WordPress\SeoImporter;
 use Ramphor\Rake\Facades\Logger;
 use WP_Term;

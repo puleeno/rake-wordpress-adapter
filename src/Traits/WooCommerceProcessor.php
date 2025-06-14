@@ -2,6 +2,10 @@
 
 namespace Puleeno\Rake\WordPress\Traits;
 
+if (!defined('ABSPATH')) {
+    exit('Cheatin huh?');
+}
+
 use WP_Error;
 use WC_Product_Simple;
 use WC_Product_Attribute;

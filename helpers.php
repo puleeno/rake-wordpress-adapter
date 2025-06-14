@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit('Cheatin huh?');
+}
 
 use Ramphor\Rake\Facades\Request;
 use Ramphor\Rake\Facades\Logger;

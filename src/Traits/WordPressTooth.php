@@ -2,6 +2,10 @@
 
 namespace Puleeno\Rake\WordPress\Traits;
 
+if (!defined('ABSPATH')) {
+    exit('Cheatin huh?');
+}
+
 use Throwable;
 use Exception;
 use Psr\Http\Message\StreamInterface;
