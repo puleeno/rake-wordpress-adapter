@@ -3,7 +3,7 @@
 namespace Puleeno\Rake\WordPress\Traits\Content;
 
 if (!defined('ABSPATH')) {
-    exit('Cheatin huh?');
+    exit('Cheating huh?');
 }
 
 use PHPHtmlParser\Dom;

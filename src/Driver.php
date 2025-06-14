@@ -3,7 +3,7 @@
 namespace Puleeno\Rake\WordPress;
 
 if (!defined('ABSPATH')) {
-    exit('Cheatin huh?');
+    exit('Cheating huh?');
 }
 
 use Ramphor\Sql as SqlBuilder;
