@@ -158,7 +158,10 @@ trait WooCommerceProcessor
         }
 
         if (is_wp_error($term_taxonomy)) {
-            return $this->importedId = $term_taxonomy;
+            $this->importedId = isset($term_taxonomy->errors['duplicate_term_slug'])
+                ? $term['term_id']
+                : $term_taxonomy;
+            return $this->importedId;
         }
 
         // set product category content to attribute `content` to download images and update content text to new URL.
