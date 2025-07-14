@@ -195,7 +195,7 @@ trait WooCommerceProcessor
         return new WC_Product_Simple();
     }
 
-    public function importProductCategories($productCategories, $isNested = false, $productId)
+    public function importProductCategories($productCategories, $isNested = false, $productId = null)
     {
         if (is_null($productId)) {
             if (empty($this->importedId)) {
