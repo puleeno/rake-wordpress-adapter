@@ -1,11 +1,15 @@
 {
     "name": "puleeno/rake-wordpress-adapter",
-    "description": "The WordPress adapter for Rake crawler/spider framework",
+    "description": "WordPress adapter for Rake 2.0",
     "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Puleeno\\Rake\\WordPerss\\Adater": "src/"
+        }
+    },
     "require": {
-        "ramphor/rake": "^2",
-        "ramphor/logger": "*",
-        "rappasoft/laravel-helpers": "^2.1"
+        "php": ">=8.1",
+        "ramphor/rake": "^2.0"
     },
     "license": "MIT",
     "authors": [
@@ -15,14 +19,6 @@
         }
     ],
     "minimum-stability": "dev",
-    "autoload": {
-        "psr-4": {
-            "Puleeno\\Rake\\WordPress\\": "src/"
-        },
-        "files": [
-            "./helpers.php"
-        ]
-    },
     "config": {
         "allow-plugins": {
             "alleyinteractive/composer-wordpress-autoloader": true
