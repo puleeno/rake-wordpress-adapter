@@ -4,7 +4,7 @@
     "type": "library",
     "autoload": {
         "psr-4": {
-            "Puleeno\\Rake\\WordPerss\\Adater": "src/"
+            "Puleeno\\Rake\\WordPress\\Adater\\": "src/"
         }
     },
     "require": {
