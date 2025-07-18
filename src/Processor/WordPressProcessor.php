@@ -1,9 +1,9 @@
 <?php
 
-namespace Puleeno\Rake\Adapter\WordPress;
+namespace Puleeno\Rake\WordPress\Processor;
 
 /**
- * Processor xử lý dữ liệu Feed Item cho WordPress
+ * Processor for handling Feed Item data for WordPress
  */
 class WordPressProcessor
 {
