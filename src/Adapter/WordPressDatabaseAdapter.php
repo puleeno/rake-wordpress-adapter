@@ -269,12 +269,7 @@ class WordPressDatabaseAdapter implements DatabaseAdapterInterface
     public function execute(string $sql): bool
     {
         global $wpdb;
-        error_log('=== WPDB EXECUTE ===');
-        error_log('SQL: ' . $sql);
         $result = $wpdb->query($sql);
-        error_log('Result: ' . ($result === false ? 'FALSE' : $result));
-        error_log('Last Error: ' . $wpdb->last_error);
-        error_log('Last Query: ' . $wpdb->last_query);
         return $result !== false;
     }
 
