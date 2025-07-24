@@ -1,247 +1,669 @@
-# WordPress Adapter for Rake 2.0
+# RAKE WORDPRESS ADAPTER
+**Phiên bản:** 1.0
+**Ngày tạo:** 2025
+**Tác giả:** Development Team
 
-WordPress adapter cho Rake 2.0 framework, cung cấp integration với WordPress database và các tính năng WordPress.
+---
 
-## Cài đặt
+## 📋 MỤC LỤC
 
-```bash
-composer require puleeno/rake-wordpress-adapter
+1. [Tổng quan WordPress Adapter](#tổng-quan-wordpress-adapter)
+2. [Mối quan hệ với Rake Core](#mối-quan-hệ-với-rake-core)
+3. [Kiến trúc Adapter](#kiến-trúc-adapter)
+4. [Database Integration](#database-integration)
+5. [WordPress Integration](#wordpress-integration)
+6. [Cách sử dụng](#cách-sử-dụng)
+7. [Tài liệu kỹ thuật](#tài-liệu-kỹ-thuật)
+8. [Development Guidelines](#development-guidelines)
+
+---
+
+## 🎯 TỔNG QUAN WORDPRESS ADAPTER
+
+### Mục tiêu
+Rake WordPress Adapter là bridge giữa Rake Core Framework và WordPress, cung cấp:
+
+- **WordPress Database Integration**: Adapter cho WordPress database operations
+- **WordPress Hooks Integration**: Tích hợp với WordPress hooks system
+- **WordPress Admin Integration**: Tích hợp với WordPress admin interface
+- **Security Layer**: WordPress security functions integration
+- **Cache Integration**: WordPress cache system integration
+
+### Vai trò trong hệ thống
+```
+┌─────────────────────────────────────────────────────────────┐
+│                RAKE WORDPRESS ADAPTER                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
+│  │   DATABASE      │  │     HOOKS       │  │    ADMIN    │ │
+│  │   ADAPTER       │  │   INTEGRATION   │  │ INTEGRATION │ │
+│  │                 │  │                 │  │             │ │
+│  │ • WP Database   │  │ • add_action    │  │ • Menu      │ │
+│  │ • Query Builder │  │ • add_filter    │  │ • Pages     │ │
+│  │ • Prefix Handle │  │ • do_action     │  │ • Scripts   │ │
+│  │ • wpdb Wrapper  │  │ • apply_filters │  │ • Styles    │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+│                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
+│  │    SECURITY     │  │      CACHE      │  │   CONFIG    │ │
+│  │     LAYER       │  │   INTEGRATION   │  │ INTEGRATION │ │
+│  │                 │  │                 │  │             │ │
+│  │ • Nonce Check   │  │ • WP Cache      │  │ • WP Config │ │
+│  │ • Capability    │  │ • Transients    │  │ • Options   │ │
+│  │ • Sanitization  │  │ • Object Cache  │  │ • Settings  │ │
+│  │ • Validation    │  │ • Query Cache   │  │ • Constants │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Cấu trúc
+---
 
+## 🔗 MỐI QUAN HỆ VỚI RAKE CORE
+
+### Dependency Chain
 ```
-src/
-├── Adapter/
-│   └── WordPressDatabaseAdapter.php    # High-level database operations
-├── Driver/
-│   └── WordPressDatabaseDriver.php     # Low-level database operations
-├── Processor/
-│   └── WordPressProcessor.php          # WordPress-specific processing
-└── WordPressResourceManager.php        # WordPress resource management
+┌─────────────────┐    depends on    ┌─────────────────┐
+│   CRAWFLOW      │ ────────────────▶ │ RAKE WORDPRESS  │
+│   PLUGIN        │                  │    ADAPTER      │
+└─────────────────┘                  └─────────────────┘
+                                              │
+                                              │ depends on
+                                              ▼
+                                    ┌─────────────────┐
+                                    │   RAKE CORE     │
+                                    │   FRAMEWORK     │
+                                    └─────────────────┘
 ```
 
-## Sử dụng
-
-### 1. WordPress Database Driver
-
-Driver xử lý low-level database operations sử dụng WordPress `$wpdb`:
+### Interface Implementation
+WordPress Adapter implements các interfaces từ Rake Core:
 
 ```php
-use Puleeno\Rake\WordPress\Driver\WordPressDatabaseDriver;
+// Database Adapter Interface từ Rake Core
+interface DatabaseAdapterInterface
+{
+    public function query(string $sql): bool;
+    public function getResults(string $sql): array;
+    public function getRow(string $sql): ?array;
+    public function getVar(string $sql): mixed;
+    public function insert(string $table, array $data): int;
+    public function update(string $table, array $data, array $where): int;
+    public function delete(string $table, array $where): int;
+    public function getPrefix(): string;
+    public function escape(string $value): string;
+}
 
-$driver = new WordPressDatabaseDriver();
-
-// Execute query
-$result = $driver->query("SELECT * FROM wp_posts WHERE post_type = 'post'");
-
-// Execute without results
-$success = $driver->execute("UPDATE wp_posts SET post_status = 'publish'");
-
-// Transactions
-$driver->beginTransaction();
-$driver->execute("INSERT INTO wp_posts (post_title) VALUES ('Test')");
-$driver->commit();
+// WordPress Adapter Implementation
+class WordPressDatabaseAdapter implements DatabaseAdapterInterface
+{
+    // Implementation cho WordPress
+}
 ```
 
-### 2. WordPress Database Adapter
-
-Adapter cung cấp high-level database operations:
-
+### Service Registration
 ```php
-use Puleeno\Rake\WordPress\Adapter\WordPressDatabaseAdapter;
+// Trong Rake Container
+$container->bind(DatabaseAdapterInterface::class, WordPressDatabaseAdapter::class);
+$container->bind(WordPressHooksInterface::class, WordPressHooksAdapter::class);
+$container->bind(WordPressAdminInterface::class, WordPressAdminAdapter::class);
+```
+
+---
+
+## 🏗️ KIẾN TRÚC ADAPTER
+
+### Package Structure
+```
+rake-wordpress-adapter/
+├── src/
+│   ├── Database/              # WordPress Database Integration
+│   │   ├── WordPressDatabaseAdapter.php
+│   │   ├── WordPressQueryBuilder.php
+│   │   └── WordPressPrefixHandler.php
+│   ├── Hooks/                 # WordPress Hooks Integration
+│   │   ├── WordPressHooksAdapter.php
+│   │   └── WordPressHooksInterface.php
+│   ├── Admin/                 # WordPress Admin Integration
+│   │   ├── WordPressAdminAdapter.php
+│   │   ├── WordPressMenuBuilder.php
+│   │   └── WordPressScriptManager.php
+│   ├── Security/              # WordPress Security Layer
+│   │   ├── WordPressSecurityAdapter.php
+│   │   ├── WordPressNonceHandler.php
+│   │   └── WordPressCapabilityChecker.php
+│   ├── Cache/                 # WordPress Cache Integration
+│   │   ├── WordPressCacheAdapter.php
+│   │   ├── WordPressTransientHandler.php
+│   │   └── WordPressObjectCache.php
+│   └── Config/                # WordPress Config Integration
+│       ├── WordPressConfigAdapter.php
+│       └── WordPressOptionsHandler.php
+├── composer.json
+└── README.md
+```
+
+### Package Dependencies
+```json
+{
+    "name": "crawlflow/rake-wordpress-adapter",
+    "require": {
+        "php": ">=8.1",
+        "crawlflow/rake-core": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rake\\WordPress\\": "src/"
+        }
+    }
+}
+```
+
+---
+
+## 🗄️ DATABASE INTEGRATION
+
+### WordPress Database Adapter
+```php
+use Rake\WordPress\Database\WordPressDatabaseAdapter;
 
 $adapter = new WordPressDatabaseAdapter();
 
-// Insert data
-$adapter->insert('wp_posts', [
+// Basic operations
+$adapter->insert('posts', [
     'post_title' => 'Test Post',
     'post_content' => 'Test content',
-    'post_status' => 'publish',
-    'post_type' => 'post'
+    'post_status' => 'publish'
 ]);
 
-// Select data
-$posts = $adapter->select('wp_posts', ['*'], [
-    'post_type' => 'post',
-    'post_status' => 'publish'
-], 10, ['post_date' => 'DESC']);
+$posts = $adapter->getResults("SELECT * FROM {$adapter->getPrefix()}posts WHERE post_type = 'post'");
 
-// Update data
-$adapter->update('wp_posts',
+$adapter->update('posts',
     ['post_status' => 'draft'],
     ['ID' => 1]
 );
 
-// Delete data
-$adapter->delete('wp_posts', ['ID' => 1]);
-
-// Count rows
-$count = $adapter->count('wp_posts', ['post_type' => 'post']);
-
-// Get single row
-$post = $adapter->get('wp_posts', ['*'], ['ID' => 1]);
+$adapter->delete('posts', ['ID' => 1]);
 ```
 
-### 3. Integration với Rake
+### WordPress Query Builder
+```php
+use Rake\WordPress\Database\WordPressQueryBuilder;
+
+$query = new WordPressQueryBuilder($adapter);
+
+$posts = $query->select(['ID', 'post_title', 'post_content'])
+    ->from('posts')
+    ->where('post_type', '=', 'post')
+    ->where('post_status', '=', 'publish')
+    ->orderBy('post_date', 'DESC')
+    ->limit(10)
+    ->get();
+```
+
+### Prefix Handling
+```php
+// Tự động xử lý WordPress table prefix
+$adapter = new WordPressDatabaseAdapter();
+echo $adapter->getPrefix(); // wp_
+
+// Tự động thêm prefix khi cần
+$table = $adapter->addPrefix('posts'); // wp_posts
+```
+
+---
+
+## 🔧 WORDPRESS INTEGRATION
+
+### WordPress Hooks Integration
+```php
+use Rake\WordPress\Hooks\WordPressHooksAdapter;
+
+$hooks = new WordPressHooksAdapter();
+
+// Add actions
+$hooks->addAction('init', [$this, 'initialize']);
+$hooks->addAction('wp_loaded', [$this, 'onWpLoaded']);
+
+// Add filters
+$hooks->addFilter('the_content', [$this, 'modifyContent']);
+
+// Do actions
+$hooks->doAction('custom_action', $data);
+
+// Apply filters
+$modified = $hooks->applyFilters('custom_filter', $value);
+```
+
+### WordPress Admin Integration
+```php
+use Rake\WordPress\Admin\WordPressAdminAdapter;
+
+$admin = new WordPressAdminAdapter();
+
+// Add menu pages
+$admin->addMenuPage(
+    'My Plugin',
+    'My Plugin',
+    'manage_options',
+    'my-plugin',
+    [$this, 'renderPage']
+);
+
+// Enqueue scripts
+$admin->enqueueScript('my-script', '/path/to/script.js');
+
+// Enqueue styles
+$admin->enqueueStyle('my-style', '/path/to/style.css');
+```
+
+### WordPress Security Layer
+```php
+use Rake\WordPress\Security\WordPressSecurityAdapter;
+
+$security = new WordPressSecurityAdapter();
+
+// Nonce verification
+if ($security->verifyNonce($_POST['nonce'], 'my_action')) {
+    // Process form
+}
+
+// Capability checking
+if ($security->currentUserCan('manage_options')) {
+    // Admin action
+}
+
+// Data sanitization
+$clean = $security->sanitizeTextField($_POST['data']);
+```
+
+---
+
+## 🚀 CÁCH SỬ DỤNG
+
+### 1. Cài đặt
+
+#### Composer Installation
+```bash
+composer require crawlflow/rake-wordpress-adapter
+```
+
+#### Manual Installation
+```bash
+git clone https://github.com/crawlflow/rake-wordpress-adapter.git
+cd rake-wordpress-adapter
+composer install
+```
+
+### 2. Khởi tạo với Rake Core
 
 ```php
-use Puleeno\Rake\WordPress\Adapter\WordPressDatabaseAdapter;
-use Rake\Manager\Database\MigrationManager;
-use Rake\Database\SchemaGenerator;
+use Rake\Rake;
+use Rake\WordPress\Database\WordPressDatabaseAdapter;
+use Rake\WordPress\Hooks\WordPressHooksAdapter;
+use Rake\WordPress\Admin\WordPressAdminAdapter;
 
-// Create adapter
+// Tạo Rake container
+$app = new Rake();
+
+// Register WordPress adapters
+$app->singleton(DatabaseAdapterInterface::class, WordPressDatabaseAdapter::class);
+$app->singleton(WordPressHooksInterface::class, WordPressHooksAdapter::class);
+$app->singleton(WordPressAdminInterface::class, WordPressAdminAdapter::class);
+
+// Bootstrap
+$app->make(WordPressHooksInterface::class);
+```
+
+### 3. Sử dụng Database Adapter
+
+```php
+// Basic CRUD operations
 $adapter = new WordPressDatabaseAdapter();
 
-// Use with MigrationManager
-$migrationManager = new MigrationManager($adapter);
+// Insert
+$postId = $adapter->insert('posts', [
+    'post_title' => 'New Post',
+    'post_content' => 'Post content',
+    'post_status' => 'publish',
+    'post_type' => 'post'
+]);
 
-// Use with SchemaGenerator
-$schemaGenerator = new SchemaGenerator($adapter);
+// Select
+$posts = $adapter->getResults("
+    SELECT * FROM {$adapter->getPrefix()}posts
+    WHERE post_type = 'post'
+    ORDER BY post_date DESC
+    LIMIT 10
+");
+
+// Update
+$affected = $adapter->update('posts',
+    ['post_status' => 'draft'],
+    ['ID' => $postId]
+);
+
+// Delete
+$deleted = $adapter->delete('posts', ['ID' => $postId]);
 ```
 
-## Tính năng
+### 4. Sử dụng Hooks Adapter
 
-### 1. WordPress Integration
+```php
+$hooks = new WordPressHooksAdapter();
 
-- **Automatic prefix detection**: Tự động sử dụng WordPress table prefix
-- **WordPress constants**: Sử dụng `DB_NAME`, `DB_HOST`, etc.
-- **WordPress charset/collation**: Tự động sử dụng WordPress database settings
-- **WordPress security**: Sử dụng WordPress prepared statements
+// Register plugin hooks
+$hooks->addAction('plugins_loaded', function() {
+    // Plugin initialization
+});
 
-### 2. Database Operations
+$hooks->addAction('admin_menu', function() {
+    // Add admin menu
+});
 
-- **CRUD operations**: Insert, select, update, delete
-- **Transactions**: Begin, commit, rollback
-- **Table management**: Create, drop, structure inspection
-- **Index management**: Create, drop, inspect indexes
-- **Schema inspection**: Get table structure and indexes
-
-### 3. WordPress Features
-
-- **Post management**: Create, update, delete WordPress posts
-- **User management**: Handle WordPress users
-- **Meta management**: Handle post/user meta
-- **Taxonomy management**: Handle categories, tags
-- **Media management**: Handle attachments
-
-## Testing
-
-### 1. Run Tests
-
-```bash
-cd rake-wordpress-adapter
-php test-adapter.php
+$hooks->addFilter('the_title', function($title) {
+    return 'Modified: ' . $title;
+});
 ```
 
-### 2. Expected Output
+### 5. Sử dụng Admin Adapter
 
-```
-=== WordPress Adapter Test ===
+```php
+$admin = new WordPressAdminAdapter();
 
-1. Testing WordPress Database Driver...
-   ✓ Driver created successfully
-   - Database name: wordpress_db
-   - Charset: utf8mb4
-   - Collation: utf8mb4_unicode_ci
+// Add admin menu
+$admin->addMenuPage(
+    'My Plugin',
+    'My Plugin',
+    'manage_options',
+    'my-plugin',
+    function() {
+        echo '<div class="wrap"><h1>My Plugin</h1></div>';
+    }
+);
 
-2. Testing WordPress Database Adapter...
-   ✓ Adapter created successfully
-
-3. Testing database operations...
-   - Create table: ✓
-   - Insert data: ✓
-   - Select data: ✓
-   - Update data: ✓
-   - Count rows: 1
-   - Get single row: ✓
-
-4. Testing transactions...
-   - Begin transaction: ✓
-   - Insert in transaction: ✓
-   - Commit transaction: ✓
-   - Rollback transaction: ✓
-
-5. Cleaning up...
-   - Drop test table: ✓
-
-=== Test completed successfully ===
+// Enqueue admin assets
+$admin->enqueueScript('my-admin-script', '/js/admin.js');
+$admin->enqueueStyle('my-admin-style', '/css/admin.css');
 ```
 
-## Configuration
+### 6. Sử dụng Security Adapter
 
-### 1. WordPress Settings
+```php
+$security = new WordPressSecurityAdapter();
 
+// Form processing
+if ($_POST && $security->verifyNonce($_POST['nonce'], 'save_data')) {
+    if ($security->currentUserCan('manage_options')) {
+        $cleanData = $security->sanitizeTextField($_POST['data']);
+        // Process data
+    }
+}
+```
+
+### 7. Sử dụng Cache Adapter
+
+```php
+$cache = new WordPressCacheAdapter();
+
+// Set cache
+$cache->set('my_key', $data, 3600); // 1 hour
+
+// Get cache
+$data = $cache->get('my_key');
+
+// Delete cache
+$cache->delete('my_key');
+```
+
+---
+
+## 📚 TÀI LIỆU KỸ THUẬT
+
+### Tài liệu chi tiết
+📖 [`docs/technical-documentation.md`](docs/technical-documentation.md)
+
+**Nội dung:**
+- WordPress Database Integration
+- WordPress Hooks Integration
+- WordPress Admin Integration
+- Security Layer
+- Cache Integration
+- Development Guidelines
+
+### Code Examples
+
+#### Database Operations
+```php
+// Transaction handling
+$adapter->beginTransaction();
+try {
+    $adapter->insert('posts', $postData);
+    $adapter->insert('postmeta', $metaData);
+    $adapter->commit();
+} catch (Exception $e) {
+    $adapter->rollback();
+    throw $e;
+}
+```
+
+#### Hook Integration
+```php
+// Custom hooks
+$hooks->addAction('my_custom_hook', function($data) {
+    // Process data
+});
+
+$hooks->doAction('my_custom_hook', $data);
+```
+
+#### Admin Integration
+```php
+// Submenu pages
+$admin->addSubmenuPage(
+    'my-plugin',
+    'Settings',
+    'Settings',
+    'manage_options',
+    'my-plugin-settings',
+    [$this, 'renderSettings']
+);
+```
+
+---
+
+## 🛠️ DEVELOPMENT GUIDELINES
+
+### Coding Standards
+
+#### WordPress Integration Best Practices
+```php
+// Always use WordPress functions with backslash prefix
+$result = \wp_verify_nonce($nonce, $action);
+
+// Use WordPress security functions
+$sanitized = \sanitize_text_field($input);
+
+// Check capabilities before actions
+if (\current_user_can('manage_options')) {
+    // Perform admin action
+}
+
+// Use WordPress hooks properly
+\add_action('init', [$this, 'initialize']);
+```
+
+#### PSR-12 Compliance
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Rake\WordPress\Database;
+
+use Rake\Database\DatabaseAdapterInterface;
+
+class WordPressDatabaseAdapter implements DatabaseAdapterInterface
+{
+    private \wpdb $wpdb;
+    private string $prefix;
+
+    public function __construct()
+    {
+        global $wpdb;
+        $this->wpdb = $wpdb;
+        $this->prefix = $wpdb->prefix;
+    }
+
+    public function query(string $sql): bool
+    {
+        return $this->wpdb->query($sql) !== false;
+    }
+}
+```
+
+### Testing Guidelines
+
+#### Unit Testing
+```php
+class WordPressDatabaseAdapterTest extends TestCase
+{
+    private WordPressDatabaseAdapter $adapter;
+
+    protected function setUp(): void
+    {
+        $this->adapter = new WordPressDatabaseAdapter();
+    }
+
+    public function testInsert(): void
+    {
+        // Arrange
+        $data = ['post_title' => 'Test Post'];
+
+        // Act
+        $id = $this->adapter->insert('posts', $data);
+
+        // Assert
+        $this->assertGreaterThan(0, $id);
+    }
+}
+```
+
+#### Integration Testing
+```php
+class WordPressIntegrationTest extends TestCase
+{
+    public function testDatabaseAdapter(): void
+    {
+        // Arrange
+        $adapter = new WordPressDatabaseAdapter();
+
+        // Act
+        $result = $adapter->query('SELECT 1');
+
+        // Assert
+        $this->assertTrue($result);
+    }
+}
+```
+
+### Error Handling
+```php
+class WordPressException extends Exception
+{
+    public function __construct(string $message, array $context = [], int $code = 0, ?Throwable $previous = null)
+    {
+        parent::__construct("WordPress error: {$message}", $code, $previous);
+    }
+}
+
+// Usage
+try {
+    $adapter = new WordPressDatabaseAdapter();
+    $result = $adapter->insert('table', $data);
+} catch (WordPressException $e) {
+    Logger::error('WordPress operation failed: ' . $e->getMessage());
+}
+```
+
+---
+
+## 🔧 CONFIGURATION
+
+### WordPress Settings
 Adapter tự động sử dụng WordPress database settings:
 
 ```php
 // Tự động detect từ WordPress
-$driver = new WordPressDatabaseDriver();
-echo $driver->getDatabaseName(); // DB_NAME
-echo $driver->getCharset();      // $wpdb->charset
-echo $driver->getCollation();    // $wpdb->collate
+$adapter = new WordPressDatabaseAdapter();
+echo $adapter->getPrefix();        // wp_
+echo $adapter->getCharset();       // utf8mb4
+echo $adapter->getCollation();     // utf8mb4_unicode_ci
 ```
 
-### 2. Custom Configuration
-
+### Custom Configuration
 ```php
 // Nếu cần custom settings
 $adapter = new WordPressDatabaseAdapter();
-$driver = $adapter->getDriver();
 
 // Custom database operations
-$driver->execute("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
+$adapter->query("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
 ```
 
-## Error Handling
+---
 
-### 1. Database Errors
+## 🚨 TROUBLESHOOTING
 
+### Common Issues
+
+#### Error: `Class 'Rake\WordPress\Database\WordPressDatabaseAdapter' not found`
+**Solution:**
+```bash
+composer dump-autoload
+```
+
+#### Error: `WordPress not loaded`
+**Solution:**
 ```php
-try {
-    $adapter->insert('wp_posts', [
-        'post_title' => 'Test',
-        'post_content' => 'Content'
-    ]);
-} catch (Exception $e) {
-    echo "Database error: " . $e->getMessage();
-    echo "Last SQL error: " . $adapter->getLastError();
-}
+// Ensure WordPress is loaded
+require_once 'wp-load.php';
 ```
 
-### 2. Transaction Errors
+#### Error: `Database connection failed`
+**Solution:**
+- Check WordPress database configuration
+- Verify database credentials
+- Check database server status
 
+### Debug Mode
 ```php
-try {
-    $adapter->beginTransaction();
+// Enable debug mode
+$adapter = new WordPressDatabaseAdapter();
 
-    $adapter->insert('wp_posts', ['post_title' => 'Post 1']);
-    $adapter->insert('wp_posts', ['post_title' => 'Post 2']);
+// Check last error
+echo $adapter->getLastError();
 
-    $adapter->commit();
-} catch (Exception $e) {
-    $adapter->rollback();
-    echo "Transaction failed: " . $e->getMessage();
-}
+// Check affected rows
+echo $adapter->affectedRows();
 ```
 
-## Performance
+---
 
-### 1. Optimizations
+## 📊 PERFORMANCE
 
+### Optimizations
 - **Prepared statements**: Sử dụng WordPress prepared statements
 - **Connection reuse**: Tái sử dụng WordPress database connection
 - **Query optimization**: Tối ưu queries cho WordPress
 - **Memory management**: Efficient memory usage
 
-### 2. Best Practices
-
+### Best Practices
 ```php
 // Use transactions for multiple operations
 $adapter->beginTransaction();
 try {
     foreach ($posts as $post) {
-        $adapter->insert('wp_posts', $post);
+        $adapter->insert('posts', $post);
     }
     $adapter->commit();
 } catch (Exception $e) {
@@ -250,52 +672,42 @@ try {
 }
 
 // Use batch operations
-$adapter->select('wp_posts', ['*'], [], 1000); // Limit results
+$adapter->getResults("SELECT * FROM posts LIMIT 1000");
 
 // Use specific columns
-$adapter->select('wp_posts', ['ID', 'post_title'], ['post_type' => 'post']);
+$adapter->getResults("SELECT ID, post_title FROM posts WHERE post_type = 'post'");
 ```
 
-## Troubleshooting
+---
 
-### 1. Common Issues
+## 🎯 KẾT LUẬN
 
-**Error**: `Class 'Puleeno\Rake\WordPress\Adapter\WordPressDatabaseAdapter' not found`
+Rake WordPress Adapter cung cấp bridge hoàn chỉnh giữa Rake Core Framework và WordPress với:
 
-**Solution**:
-```bash
-composer dump-autoload
-```
+### Điểm nổi bật:
+1. **Database Integration**: WordPress database adapter với prefix handling
+2. **Hooks Integration**: WordPress hooks system integration
+3. **Admin Integration**: WordPress admin interface integration
+4. **Security Layer**: WordPress security functions integration
+5. **Cache Integration**: WordPress cache system integration
 
-**Error**: `WordPress not loaded`
-
-**Solution**:
+### Sử dụng:
 ```php
-// Ensure WordPress is loaded
-require_once 'wp-load.php';
-```
-
-**Error**: `Database connection failed`
-
-**Solution**:
-- Check WordPress database configuration
-- Verify database credentials
-- Check database server status
-
-### 2. Debug Mode
-
-```php
-// Enable debug mode
+// Initialize adapter
 $adapter = new WordPressDatabaseAdapter();
-$driver = $adapter->getDriver();
+$hooks = new WordPressHooksAdapter();
+$admin = new WordPressAdminAdapter();
 
-// Check last error
-echo $driver->getLastError();
+// Use database
+$results = $adapter->getResults('SELECT * FROM wp_posts');
 
-// Check affected rows
-echo $driver->affectedRows();
+// Use hooks
+$hooks->addAction('init', [$this, 'initialize']);
+
+// Use admin
+$admin->addMenuPage('My Plugin', 'My Plugin', 'manage_options', 'my-plugin', [$this, 'renderPage']);
 ```
 
-## License
+---
 
-MIT License - see LICENSE file for details.
+**Tài liệu này sẽ được cập nhật thường xuyên khi có thay đổi trong adapter.**
