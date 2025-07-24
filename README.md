@@ -146,10 +146,10 @@ rake-wordpress-adapter/
 ### Package Dependencies
 ```json
 {
-    "name": "crawlflow/rake-wordpress-adapter",
+    "name": "puleeno/rake-wordpress-adapter",
     "require": {
         "php": ">=8.1",
-        "crawlflow/rake-core": "^1.0"
+        "ramphor/rake": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -285,12 +285,12 @@ $clean = $security->sanitizeTextField($_POST['data']);
 
 #### Composer Installation
 ```bash
-composer require crawlflow/rake-wordpress-adapter
+composer require puleeno/rake-wordpress-adapter
 ```
 
 #### Manual Installation
 ```bash
-git clone https://github.com/crawlflow/rake-wordpress-adapter.git
+git clone https://github.com/puleeno/rake-wordpress-adapter.git
 cd rake-wordpress-adapter
 composer install
 ```

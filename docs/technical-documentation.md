@@ -93,10 +93,10 @@ rake-wordpress-adapter/
 ### 2.2 Package Dependencies
 ```json
 {
-    "name": "crawlflow/rake-wordpress-adapter",
+    "name": "puleeno/rake-wordpress-adapter",
     "require": {
         "php": ">=8.1",
-        "crawlflow/rake-core": "^1.0"
+        "ramphor/rake": "^2.0"
     },
     "autoload": {
         "psr-4": {
