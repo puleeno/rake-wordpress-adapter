@@ -91,30 +91,134 @@ class WordPressFileDownloaderClient implements FileDownloaderClientInterface
 
         // Get file info
         $fileSize = filesize($destinationPath);
+
+        // Verify file was created
+        if (!file_exists($destinationPath)) {
+            return [
+                'success' => false,
+                'file_path' => null,
+                'error' => 'File download completed but file not found at destination',
+                'file_size' => 0,
+                'mime_type' => null
+            ];
+        }
+
+        // Get file info
+        $mimeType = wp_remote_retrieve_header($response, "content-type");
+
+        // Calculate checksum if requested (for integrity verification)
+        $checksum = null;
+        if (!empty($options["calculate_checksum"]) || !empty($options["verify_checksum"])) {
+            try {
+                // Use hash function directly (XXH128 if available)
+                if (function_exists("hash") && in_array("xxh128", hash_algos())) {
+                    $content = file_get_contents($destinationPath);
+                    if ($content !== false) {
+                        $checksum = hash("xxh128", $content);
+                    }
+                }
+            } catch (Exception $e) {
+                // Checksum calculation failed, but do not fail the download
+                error_log("WordPressFileDownloaderClient: Failed to calculate checksum: " . $e->getMessage());
+            }
+        }
+
+        // Verify checksum if provided
+        if (!empty($options["expected_checksum"]) && $checksum) {
+        // Verify file was created
+        if (!file_exists($destinationPath)) {
+            return [
+                'success' => false,
+                'file_path' => null,
+                'error' => 'File download completed but file not found at destination',
+                'file_size' => 0,
+                'mime_type' => null
+            ];
+        }
+
+        // Get file info
+        $fileSize = filesize($destinationPath);
         $mimeType = wp_remote_retrieve_header($response, 'content-type');
 
-        return [
+        // Calculate checksum if requested (for integrity verification)
+        $checksum = null;
+        if (!empty($options['calculate_checksum']) || !empty($options['verify_checksum'])) {
+            try {
+                // Use hash function directly (XXH128 if available)
+                if (function_exists('hash') && in_array('xxh128', hash_algos())) {
+                    $content = file_get_contents($destinationPath);
+                    if ($content !== false) {
+                        $checksum = hash('xxh128', $content);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Checksum calculation failed, but do not fail the download
+                error_log('WordPressFileDownloaderClient: Failed to calculate checksum: ' . $e->getMessage());
+            }
+        }
+
+        // Verify checksum if provided
+        if (!empty($options['expected_checksum']) && $checksum) {
+            if ($checksum !== $options['expected_checksum']) {
+                @unlink($destinationPath); // Remove corrupted file
+                return [
+                    'success' => false,
+                    'file_path' => null,
+                    'error' => 'Checksum verification failed: file may be corrupted',
+                    'file_size' => 0,
+                    'mime_type' => null,
+                    'checksum' => $checksum,
+                    'expected_checksum' => $options['expected_checksum']
+                ];
+            }
+        }
+
+        $result = [
             'success' => true,
             'file_path' => $destinationPath,
             'error' => null,
             'file_size' => $fileSize,
             'mime_type' => $mimeType ?: $this->getMimeTypeFromFile($destinationPath)
         ];
+
+        // Include checksum in result if calculated
+        if ($checksum) {
+            $result['checksum'] = $checksum;
+        }
+
+        return $result;
+            if ($checksum !== $options["expected_checksum"]) {
+                @unlink($destinationPath); // Remove corrupted file
+                return [
+                    "success" => false,
+                    "file_path" => null,
+                    "error" => "Checksum verification failed: file may be corrupted",
+                    "file_size" => 0,
+                    "mime_type" => null,
+                    "checksum" => $checksum,
+                    "expected_checksum" => $options["expected_checksum"]
+                ];
+            }
+        }
+
+        $result = [
+            "success" => true,
+            "file_path" => $destinationPath,
+            "error" => null,
+            "file_size" => $fileSize,
+            "mime_type" => $mimeType ?: $this->getMimeTypeFromFile($destinationPath)
+        ];
+
+        // Include checksum in result if calculated
+        if ($checksum) {
+            $result["checksum"] = $checksum;
+        }
+
+        return $result;
     }
 
     /**
      * Download file và trả về content (không lưu vào disk)
-     *
-     * @param string $url URL của file cần download
-     * @param array $options Options cho download
-     * @return array
-     */
-    public function downloadContent(string $url, array $options = []): array
-    {
-        // Merge options
-        $requestOptions = array_merge($this->defaultOptions, $options);
-        $requestOptions['stream'] = false; // Get body directly
-
         // WordPress wp_remote_get
         $response = wp_remote_get($url, $requestOptions);
 
