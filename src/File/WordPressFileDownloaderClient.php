@@ -1,6 +1,6 @@
 <?php
 
-namespace RamphorRake\Adapter\File;
+namespace Puleeno\Rake\WordPress\File;
 
 use Rake\Contracts\File\FileDownloaderClientInterface;
 
