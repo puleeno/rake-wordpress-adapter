@@ -241,23 +241,12 @@ class WordPressFileDownloaderClient implements FileDownloaderClientInterface
 
         $responseCode = wp_remote_retrieve_response_code($response);
         if ($responseCode !== 200) {
-        $responseCode = wp_remote_retrieve_response_code($response);
-        if ($responseCode !== 200) {
             return [
                 'success' => false,
                 'file_size' => null,
                 'mime_type' => null,
                 'last_modified' => null,
                 'error' => "HTTP {$responseCode}: " . wp_remote_retrieve_response_message($response)
-            ];
-        }
-                'success' => false,
-                'file_size' => null,
-                'mime_type' => null,
-                'last_modified' => null,
-                'error' => "HTTP {$responseCode}: " . wp_remote_retrieve_response_message($response),
-    }
-}
             ];
         }
 
