@@ -241,4 +241,186 @@ class CollectResourcesProcessor extends AbstractProcessor
         if (preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $matches)) {
             foreach ($matches[1] as $src) {
                 if (strpos($src, 'http') !== 0) {
-                    $
+                    $src = $base . '/' . ltrim($src, '/');
+                }
+                $images[] = [
+                    'type' => 'image',
+                    'url' => $src,
+                    'parent_url' => $parentUrl,
+                ];
+            }
+        }
+
+        return $images;
+    }
+
+    /**
+     * Extract file URLs from HTML
+     * 
+     * @param string $html
+     * @param string $parentUrl
+     * @return array
+     */
+    private function extractFileUrlsFromHtml(string $html, string $parentUrl): array
+    {
+        $files = [];
+        $parsedBase = parse_url($parentUrl);
+        $base = $parsedBase['scheme'] . '://' . $parsedBase['host'];
+
+        // Extract file links (PDF, DOC, ZIP, etc.)
+        if (preg_match_all('/<a[^>]+href=["\']([^"\']+\.(pdf|doc|docx|zip|rar|tar|gz))["\']/i', $html, $matches)) {
+            foreach ($matches[1] as $url) {
+                if (strpos($url, 'http') !== 0) {
+                    $url = $base . '/' . ltrim($url, '/');
+                }
+                $files[] = [
+                    'type' => 'file',
+                    'url' => $url,
+                    'parent_url' => $parentUrl,
+                ];
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * Extract links from HTML
+     * 
+     * @param string $html
+     * @param string $parentUrl
+     * @return array
+     */
+    private function extractLinksFromHtml(string $html, string $parentUrl): array
+    {
+        $links = [];
+        $parsedBase = parse_url($parentUrl);
+        $base = $parsedBase['scheme'] . '://' . $parsedBase['host'];
+
+        // Extract all links
+        if (preg_match_all('/<a[^>]+href=["\']([^"\']+)["\']/i', $html, $matches)) {
+            foreach ($matches[1] as $url) {
+                // Skip anchors, javascript, mailto, etc.
+                if (preg_match('/^(#|javascript:|mailto:|tel:)/i', $url)) {
+                    continue;
+                }
+
+                if (strpos($url, 'http') !== 0) {
+                    $url = $base . '/' . ltrim($url, '/');
+                }
+
+                $links[] = [
+                    'type' => 'link',
+                    'url' => $url,
+                    'parent_url' => $parentUrl,
+                ];
+            }
+        }
+
+        return $links;
+    }
+
+    /**
+     * Extract URLs from string (HTML, JSON, etc.)
+     * 
+     * @param string $content
+     * @param string $type Resource type
+     * @return array
+     */
+    private function extractUrlsFromString(string $content, string $type): array
+    {
+        $resources = [];
+
+        // Try to extract URLs using regex
+        if (preg_match_all('/https?:\/\/[^\s<>"\'{}]+/i', $content, $matches)) {
+            foreach ($matches[0] as $url) {
+                $resources[] = [
+                    'type' => $type,
+                    'url' => $url,
+                ];
+            }
+        }
+
+        return $resources;
+    }
+
+    /**
+     * Save resources to database
+     * 
+     * @param string $parentUrl
+     * @param array $resources
+     * @return int Number of resources saved
+     */
+    private function saveResources(string $parentUrl, array $resources): int
+    {
+        global $wpdb;
+        $sourcesTable = $wpdb->prefix . 'rake_data_sources';
+        $originsTable = $wpdb->prefix . 'rake_data_origins';
+        $referencesTable = $wpdb->prefix . 'rake_data_origins_references';
+
+        $savedCount = 0;
+
+        // Get parent origin ID
+        $parentOrigin = $wpdb->get_row($wpdb->prepare(
+            "SELECT id FROM {$originsTable} WHERE guid = %s",
+            $parentUrl
+        ), ARRAY_A);
+
+        if (!$parentOrigin) {
+            return 0;
+        }
+
+        $parentOriginId = (int)$parentOrigin['id'];
+
+        // Process each resource type
+        foreach ($resources as $type => $typeResources) {
+            foreach ($typeResources as $resource) {
+                $resourceUrl = $resource['url'] ?? '';
+
+                if (empty($resourceUrl)) {
+                    continue;
+                }
+
+                // Find or create child origin
+                $childOrigin = $wpdb->get_row($wpdb->prepare(
+                    "SELECT id FROM {$originsTable} WHERE guid = %s",
+                    $resourceUrl
+                ), ARRAY_A);
+
+                if (!$childOrigin) {
+                    // Create child origin
+                    $wpdb->insert($originsTable, [
+                        'source_id' => null,
+                        'guid' => $resourceUrl,
+                        'raw_data' => '',
+                        'fetched_at' => current_time('mysql'),
+                        'source_type' => 'processor',
+                        'processor_id' => 'collect_resources',
+                    ]);
+                    $childOriginId = (int)$wpdb->insert_id;
+                } else {
+                    $childOriginId = (int)$childOrigin['id'];
+                }
+
+                // Check if reference already exists
+                $existing = $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM {$referencesTable} WHERE parent_origin_id = %d AND child_origin_id = %d",
+                    $parentOriginId,
+                    $childOriginId
+                ));
+
+                if (!$existing) {
+                    $wpdb->insert($referencesTable, [
+                        'parent_origin_id' => $parentOriginId,
+                        'child_origin_id' => $childOriginId,
+                        'relationship_type' => $type,
+                        'created_at' => current_time('mysql'),
+                    ]);
+                    $savedCount++;
+                }
+            }
+        }
+
+        return $savedCount;
+    }
+}
