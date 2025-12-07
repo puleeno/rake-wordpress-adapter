@@ -26,9 +26,16 @@ class ImportWooCommerceProductProcessor extends AbstractProcessor
         }
 
         // Check if WooCommerce is active
-        if (!function_exists('wc_create_product')) {
+        if (!class_exists('WooCommerce') && !class_exists('WC_Product')) {
             $this->logError('WooCommerce is not active');
             return $this->createNullItem('WooCommerce is not active');
+        }
+        
+        // Load WooCommerce classes if needed
+        if (!class_exists('WC_Product')) {
+            if (file_exists(WP_PLUGIN_DIR . '/woocommerce/woocommerce.php')) {
+                require_once WP_PLUGIN_DIR . '/woocommerce/woocommerce.php';
+            }
         }
 
         try {
@@ -92,12 +99,29 @@ class ImportWooCommerceProductProcessor extends AbstractProcessor
                 $productId = $existingProductId;
                 $this->log('Product updated', ['product_id' => $productId, 'name' => $productName]);
             } else {
-                // Create new product
-                $productId = wc_create_product($productData);
+                // Create new product using WC_Product class
+                $product = new \WC_Product_Simple();
+                $product->set_name($productName);
+                $product->set_regular_price($productPrice);
+                $product->set_description($productDescription);
+                $product->set_short_description($productShortDescription);
+                $product->set_status($productStatus);
+                $product->set_manage_stock($manageStock);
+                
+                if (!empty($productSku)) {
+                    $product->set_sku($productSku);
+                }
+                
+                if ($manageStock && $stockQuantity !== null) {
+                    $product->set_stock_quantity((int) $stockQuantity);
+                }
+                
+                $productId = $product->save();
 
-                if (is_wp_error($productId)) {
-                    $this->logError('Failed to create product', ['error' => $productId->get_error_message()]);
-                    return $this->createNullItem('Failed to create product: ' . $productId->get_error_message());
+                if (!$productId || is_wp_error($productId)) {
+                    $errorMsg = is_wp_error($productId) ? $productId->get_error_message() : 'Failed to save product';
+                    $this->logError('Failed to create product', ['error' => $errorMsg]);
+                    return $this->createNullItem('Failed to create product: ' . $errorMsg);
                 }
 
                 $this->log('Product created', ['product_id' => $productId, 'name' => $productName]);
@@ -230,4 +254,108 @@ class ImportWooCommerceProductProcessor extends AbstractProcessor
         // If not found by URL, try by SKU
         if (!empty($sku)) {
             global $wpdb;
-    
+            
+            $productId = $wpdb->get_var($wpdb->prepare(
+                "SELECT post_id FROM {$wpdb->postmeta} 
+                WHERE meta_key = '_sku' AND meta_value = %s 
+                LIMIT 1",
+                $sku
+            ));
+            
+            if ($productId) {
+                return (int) $productId;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Set product images
+     * 
+     * @param \WC_Product $product Product object
+     * @param array $imageUrls Array of image URLs
+     * @return void
+     */
+    private function setProductImages(\WC_Product $product, array $imageUrls): void
+    {
+        if (empty($imageUrls)) {
+            return;
+        }
+
+        $maxImages = $this->getConfig('max_images_per_product', 10);
+        $imageDelay = $this->getConfig('image_download_delay', 200000); // microseconds
+        
+        $galleryIds = [];
+        $featuredId = null;
+        $processedCount = 0;
+
+        foreach ($imageUrls as $index => $imageUrl) {
+            if ($processedCount >= $maxImages) {
+                break;
+            }
+
+            if (empty($imageUrl) || !filter_var($imageUrl, FILTER_VALIDATE_URL)) {
+                continue;
+            }
+
+            // Apply delay between downloads
+            if ($imageDelay > 0 && $processedCount > 0) {
+                usleep($imageDelay);
+            }
+
+            // Download and attach image
+            $attachmentId = $this->downloadImage($imageUrl, $product->get_id());
+            
+            if (!$attachmentId || is_wp_error($attachmentId)) {
+                continue;
+            }
+
+            if ($index === 0) {
+                $featuredId = $attachmentId;
+            } else {
+                $galleryIds[] = $attachmentId;
+            }
+
+            $processedCount++;
+        }
+
+        // Set featured image
+        if ($featuredId) {
+            $product->set_image_id($featuredId);
+        }
+
+        // Set gallery images
+        if (!empty($galleryIds)) {
+            $product->set_gallery_image_ids(array_unique($galleryIds));
+        }
+
+        $product->save();
+    }
+
+    /**
+     * Download image from URL and attach to product
+     * 
+     * @param string $imageUrl Image URL
+     * @param int $productId Product ID
+     * @return int|\WP_Error Attachment ID or error
+     */
+    private function downloadImage(string $imageUrl, int $productId)
+    {
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+
+        $attachmentId = media_sideload_image($imageUrl, $productId, null, 'id');
+
+        if (is_wp_error($attachmentId)) {
+            $this->logError('Failed to download image', [
+                'url' => $imageUrl,
+                'error' => $attachmentId->get_error_message()
+            ]);
+            return $attachmentId;
+        }
+
+        return $attachmentId;
+    }
+}
