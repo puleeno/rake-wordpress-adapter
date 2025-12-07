@@ -86,7 +86,6 @@ class ScanCategoryPagesProcessor extends AbstractProcessor
 
             $response = wp_remote_get($pageUrl, [
                 'timeout' => $timeout,
-                'timeout' => 30,
                 'headers' => [
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                 ]
@@ -158,20 +157,127 @@ class ScanCategoryPagesProcessor extends AbstractProcessor
     {
         $productUrls = [];
 
-        // Pattern to match product detail URLs: /products_detail/xxx.html
-        if (preg_match_all('/href=["\']([^"\']*products_detail\/[^"\']*\.html)["\']/i', $html, $matches)) {
-            foreach ($matches[1] as $url) {
-                // Convert relative URLs to absolute
-                if (strpos($url, 'http') !== 0) {
-                    $parsedBase = parse_url($baseUrl);
-                    $base = $parsedBase['scheme'] . '://' . $parsedBase['host'];
-                    $url = $base . $url;
+        // Get product URL pattern from config (if provided)
+        $productPattern = $this->getConfig('product_url_pattern', null);
+        
+        if ($productPattern) {
+            // Use configured pattern
+            if (preg_match_all($productPattern, $html, $matches)) {
+                foreach ($matches[1] as $url) {
+                    $url = $this->normalizeUrl($url, $baseUrl);
+                    if ($url) {
+                        $productUrls[] = $url;
+                    }
                 }
-                $productUrls[] = $url;
+            }
+        } else {
+            // Default: Extract all links from HTML (generic approach)
+            // This allows the system to work with any website structure
+            if (preg_match_all('/href=["\']([^"\']+)["\']/i', $html, $matches)) {
+                foreach ($matches[1] as $url) {
+                    // Filter out common non-product URLs
+                    if ($this->isProductUrl($url)) {
+                        $url = $this->normalizeUrl($url, $baseUrl);
+                        if ($url) {
+                            $productUrls[] = $url;
+                        }
+                    }
+                }
             }
         }
 
         return array_unique($productUrls);
+    }
+
+    /**
+     * Normalize URL (convert relative to absolute)
+     * 
+     * @param string $url URL to normalize
+     * @param string $baseUrl Base URL for relative links
+     * @return string|null Normalized URL or null if invalid
+     */
+    private function normalizeUrl(string $url, string $baseUrl): ?string
+    {
+        // Skip anchors, javascript, mailto, etc.
+        if (preg_match('/^(#|javascript:|mailto:|tel:)/i', $url)) {
+            return null;
+        }
+
+        // Convert relative URLs to absolute
+        if (strpos($url, 'http') !== 0) {
+            $parsedBase = parse_url($baseUrl);
+            if (!$parsedBase) {
+                return null;
+            }
+            $base = $parsedBase['scheme'] . '://' . $parsedBase['host'];
+            
+            // Handle relative paths
+            if (strpos($url, '/') === 0) {
+                // Absolute path
+                $url = $base . $url;
+            } else {
+                // Relative path
+                $basePath = dirname($parsedBase['path'] ?? '/');
+                $url = $base . $basePath . '/' . $url;
+            }
+        }
+
+        return $url;
+    }
+
+    /**
+     * Check if URL is likely a product URL
+     * Filters out common non-product URLs
+     * 
+     * @param string $url URL to check
+     * @return bool
+     */
+    private function isProductUrl(string $url): bool
+    {
+        // Skip common non-product URLs
+        $excludePatterns = [
+            '/^#/',
+            '/^javascript:/',
+            '/^mailto:/',
+            '/^tel:/',
+            '/\.(jpg|jpeg|png|gif|webp|svg|pdf|zip|doc|docx|xls|xlsx)$/i',
+            '/\/category\//i',
+            '/\/tag\//i',
+            '/\/page\//i',
+            '/\/search\//i',
+            '/\/cart\//i',
+            '/\/checkout\//i',
+            '/\/account\//i',
+            '/\/login\//i',
+            '/\/register\//i',
+        ];
+
+        foreach ($excludePatterns as $pattern) {
+            if (preg_match($pattern, $url)) {
+                return false;
+            }
+        }
+
+        // Get exclude patterns from config
+        $configExcludes = $this->getConfig('exclude_patterns', []);
+        foreach ($configExcludes as $pattern) {
+            if (preg_match($pattern, $url)) {
+                return false;
+            }
+        }
+
+        // Get include patterns from config (if provided, only include matching URLs)
+        $includePatterns = $this->getConfig('include_patterns', []);
+        if (!empty($includePatterns)) {
+            foreach ($includePatterns as $pattern) {
+                if (preg_match($pattern, $url)) {
+                    return true;
+                }
+            }
+            return false; // If include patterns are set but none match, exclude
+        }
+
+        return true; // Default: include all URLs that don't match exclude patterns
     }
 
     /**
