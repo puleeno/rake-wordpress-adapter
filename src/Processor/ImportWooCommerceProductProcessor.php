@@ -46,7 +46,19 @@ class ImportWooCommerceProductProcessor extends AbstractProcessor
             $productDescription = $item->get('description') ?? $item->get('product_description') ?? '';
             $productShortDescription = $item->get('short_description') ?? '';
             $productUrl = $item->get('url') ?? '';
-            $productImages = $item->get('product_images') ?? [];
+            // Get product images - prefer gallery_images from preset, fallback to product_images
+            // Ensure it's always an array
+            $galleryImages = $item->get('gallery_images');
+            $productImages = $item->get('product_images');
+            
+            // Normalize to array - handle both array and string cases
+            if (!empty($galleryImages)) {
+                $productImages = is_array($galleryImages) ? $galleryImages : (is_string($galleryImages) ? [$galleryImages] : []);
+            } elseif (!empty($productImages)) {
+                $productImages = is_array($productImages) ? $productImages : (is_string($productImages) ? [$productImages] : []);
+            } else {
+                $productImages = [];
+            }
             $categoryIds = $this->getCategoryIds($item);
             $productStatus = $this->getConfig('product_status', 'draft');
             $manageStock = $this->getConfig('manage_stock', false);
@@ -137,7 +149,14 @@ class ImportWooCommerceProductProcessor extends AbstractProcessor
 
             // Set images
             if (!empty($productImages)) {
-                $this->setProductImages($product, $productImages);
+                try {
+                    $this->setProductImages($product, $productImages);
+                } catch (\Exception $e) {
+                    $this->logError('Failed to set product images', [
+                        'product_id' => $productId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
 
             // Store original URL as post meta
@@ -274,11 +293,16 @@ class ImportWooCommerceProductProcessor extends AbstractProcessor
      * Set product images
      * 
      * @param \WC_Product $product Product object
-     * @param array $imageUrls Array of image URLs
+     * @param array|string $imageUrls Array of image URLs (or single URL string - will be normalized)
      * @return void
      */
-    private function setProductImages(\WC_Product $product, array $imageUrls): void
+    private function setProductImages(\WC_Product $product, $imageUrls): void
     {
+        // Ensure $imageUrls is always an array
+        if (!is_array($imageUrls)) {
+            $imageUrls = empty($imageUrls) ? [] : (is_string($imageUrls) ? [$imageUrls] : []);
+        }
+        
         if (empty($imageUrls)) {
             return;
         }
