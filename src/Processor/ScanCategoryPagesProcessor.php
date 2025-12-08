@@ -291,18 +291,54 @@ class ScanCategoryPagesProcessor extends AbstractProcessor
     {
         global $wpdb;
         $tableName = $wpdb->prefix . 'rake_data_origins_references';
+        $originsTable = $wpdb->prefix . 'rake_data_origins';
 
         $createdCount = 0;
-        $parentUrlHash = hash('sha256', $parentUrl);
+
+        // Get parent origin ID
+        $parentOrigin = $wpdb->get_row($wpdb->prepare(
+            "SELECT id FROM {$originsTable} WHERE guid = %s",
+            $parentUrl
+        ), ARRAY_A);
+
+        if (!$parentOrigin) {
+            $this->logError('Parent origin not found', ['url' => $parentUrl]);
+            return 0;
+        }
+
+        $parentOriginId = (int)$parentOrigin['id'];
 
         foreach ($childUrls as $childUrl) {
-            $childUrlHash = hash('sha256', $childUrl);
+            // Get or create child origin ID
+            $childOrigin = $wpdb->get_row($wpdb->prepare(
+                "SELECT id FROM {$originsTable} WHERE guid = %s",
+                $childUrl
+            ), ARRAY_A);
+
+            if (!$childOrigin) {
+                // Create child origin if not exists
+                $wpdb->insert($originsTable, [
+                    'source_id' => null,
+                    'guid' => $childUrl,
+                    'raw_data' => '',
+                    'fetched_at' => current_time('mysql'),
+                    'created_at' => current_time('mysql'),
+                    'updated_at' => current_time('mysql'),
+                    'crawled' => 0,
+                    'source_type' => 'processor',
+                    'processor_id' => 'scan_category_pages',
+                ]);
+                $childOriginId = (int)$wpdb->insert_id;
+            } else {
+                $childOriginId = (int)$childOrigin['id'];
+            }
 
             // Check if reference already exists
             $exists = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$tableName} WHERE parent_url_hash = %s AND child_url_hash = %s",
-                $parentUrlHash,
-                $childUrlHash
+                "SELECT id FROM {$tableName} WHERE parent_origin_id = %d AND child_origin_id = %d AND relationship_type = %s",
+                $parentOriginId,
+                $childOriginId,
+                'category_product'
             ));
 
             if ($exists) {
@@ -313,14 +349,12 @@ class ScanCategoryPagesProcessor extends AbstractProcessor
             $result = $wpdb->insert(
                 $tableName,
                 [
-                    'parent_url' => $parentUrl,
-                    'parent_url_hash' => $parentUrlHash,
-                    'child_url' => $childUrl,
-                    'child_url_hash' => $childUrlHash,
+                    'parent_origin_id' => $parentOriginId,
+                    'child_origin_id' => $childOriginId,
                     'relationship_type' => 'category_product',
                     'created_at' => current_time('mysql'),
                 ],
-                ['%s', '%s', '%s', '%s', '%s', '%s']
+                ['%d', '%d', '%s', '%s']
             );
 
             if ($result !== false) {
