@@ -112,7 +112,7 @@ class CollectResourcesProcessor extends AbstractProcessor
     }
 
     /**
-     * Collect image resources
+     * Collect image resources with detailed classification
      * 
      * @param ParsedDataItemInterface $item
      * @param string $parentUrl
@@ -122,34 +122,39 @@ class CollectResourcesProcessor extends AbstractProcessor
     {
         $imageResources = [];
 
-        // Get images from various fields
+        // Get images from specific fields with classification
         $imageFields = [
-            'product_images',
-            'images',
-            'image_urls',
-            'gallery_images',
+            'cover_image' => 'cover_image',
+            'thumbnail' => 'cover_image', 
+            'featured_image' => 'cover_image',
+            'product_images' => 'product_image',
+            'gallery_images' => 'gallery_image',
+            'images' => 'content_image',
+            'image_urls' => 'content_image',
         ];
 
-        foreach ($imageFields as $field) {
+        foreach ($imageFields as $field => $classification) {
             $images = $item->get($field);
             if (is_array($images)) {
                 foreach ($images as $imageUrl) {
                     if (!empty($imageUrl) && filter_var($imageUrl, FILTER_VALIDATE_URL)) {
                         $imageResources[] = [
                             'type' => 'image',
+                            'subtype' => $classification,
                             'url' => $imageUrl,
                             'parent_url' => $parentUrl,
+                            'source_field' => $field,
                         ];
                     }
                 }
             } elseif (is_string($images) && !empty($images)) {
                 // Try to extract URLs from string (HTML, JSON, etc.)
-                $extracted = $this->extractUrlsFromString($images, 'image');
+                $extracted = $this->extractUrlsFromString($images, 'image', $classification);
                 $imageResources = array_merge($imageResources, $extracted);
             }
         }
 
-        // Also extract from HTML content
+        // Extract from HTML content with context
         $html = $item->get('html') ?? $item->get('content') ?? $item->get('description') ?? '';
         if (!empty($html)) {
             $extracted = $this->extractImageUrlsFromHtml($html, $parentUrl);
@@ -321,23 +326,30 @@ class CollectResourcesProcessor extends AbstractProcessor
     }
 
     /**
-     * Extract URLs from string (HTML, JSON, etc.)
+     * Extract URLs from string (HTML, JSON, etc.) with classification
      * 
      * @param string $content
      * @param string $type Resource type
+     * @param string $subtype Resource subtype (optional)
      * @return array
      */
-    private function extractUrlsFromString(string $content, string $type): array
+    private function extractUrlsFromString(string $content, string $type, string $subtype = ''): array
     {
         $resources = [];
 
         // Try to extract URLs using regex
         if (preg_match_all('/https?:\/\/[^\s<>"\'{}]+/i', $content, $matches)) {
             foreach ($matches[0] as $url) {
-                $resources[] = [
+                $resource = [
                     'type' => $type,
                     'url' => $url,
                 ];
+                
+                if ($subtype) {
+                    $resource['subtype'] = $subtype;
+                }
+                
+                $resources[] = $resource;
             }
         }
 
@@ -345,7 +357,7 @@ class CollectResourcesProcessor extends AbstractProcessor
     }
 
     /**
-     * Save resources to database
+     * Save resources to database with mime type detection
      * 
      * @param string $parentUrl
      * @param array $resources
@@ -354,23 +366,21 @@ class CollectResourcesProcessor extends AbstractProcessor
     private function saveResources(string $parentUrl, array $resources): int
     {
         global $wpdb;
-        $sourcesTable = $wpdb->prefix . 'rake_data_sources';
-        $originsTable = $wpdb->prefix . 'rake_data_origins';
-        $referencesTable = $wpdb->prefix . 'rake_data_origins_references';
+        $resourcesTable = $wpdb->prefix . 'rake_resources';
 
         $savedCount = 0;
 
-        // Get parent origin ID
-        $parentOrigin = $wpdb->get_row($wpdb->prepare(
-            "SELECT id FROM {$originsTable} WHERE guid = %s",
+        // Get parent resource ID (the imported URL)
+        $parentResource = $wpdb->get_row($wpdb->prepare(
+            "SELECT id FROM {$resourcesTable} WHERE guid = %s",
             $parentUrl
         ), ARRAY_A);
 
-        if (!$parentOrigin) {
+        if (!$parentResource) {
             return 0;
         }
 
-        $parentOriginId = (int)$parentOrigin['id'];
+        $parentResourceId = (int)$parentResource['id'];
 
         // Process each resource type
         foreach ($resources as $type => $typeResources) {
@@ -381,40 +391,40 @@ class CollectResourcesProcessor extends AbstractProcessor
                     continue;
                 }
 
-                // Find or create child origin
-                $childOrigin = $wpdb->get_row($wpdb->prepare(
-                    "SELECT id FROM {$originsTable} WHERE guid = %s",
+                // Check if resource already exists
+                $existing = $wpdb->get_row($wpdb->prepare(
+                    "SELECT id FROM {$resourcesTable} WHERE guid = %s",
                     $resourceUrl
                 ), ARRAY_A);
 
-                if (!$childOrigin) {
-                    // Create child origin
-                    $wpdb->insert($originsTable, [
-                        'source_id' => null,
-                        'guid' => $resourceUrl,
-                        'raw_data' => '',
-                        'fetched_at' => current_time('mysql'),
-                        'source_type' => 'processor',
-                        'processor_id' => 'collect_resources',
-                    ]);
-                    $childOriginId = (int)$wpdb->insert_id;
-                } else {
-                    $childOriginId = (int)$childOrigin['id'];
-                }
-
-                // Check if reference already exists
-                $existing = $wpdb->get_var($wpdb->prepare(
-                    "SELECT id FROM {$referencesTable} WHERE parent_origin_id = %d AND child_origin_id = %d",
-                    $parentOriginId,
-                    $childOriginId
-                ));
-
                 if (!$existing) {
-                    $wpdb->insert($referencesTable, [
-                        'parent_origin_id' => $parentOriginId,
-                        'child_origin_id' => $childOriginId,
-                        'relationship_type' => $type,
+                    // Determine data type using mime type detection
+                    $dataType = $this->determineDataTypeByUrl($resourceUrl, $resource['type'] ?? $type);
+                    $subtype = $resource['subtype'] ?? '';
+
+                    // Create resource entry with parent_id
+                    $wpdb->insert($resourcesTable, [
+                        'parent_id' => $parentResourceId,
+                        'tooth_id' => 0, // Will be set later if needed
+                        'data_type' => $dataType,
+                        'guid' => $resourceUrl,
+                        'current_content' => $resource['content'] ?? '',
+                        'app_data_type' => $subtype,
+                        'app_guid' => '',
+                        'import_status' => 'pending',
+                        'import_retry' => 0,
+                        'imported_at' => null,
+                        'metadata' => json_encode([
+                            'source_url' => $resourceUrl,
+                            'parent_url' => $parentUrl,
+                            'parent_id' => $parentResourceId,
+                            'resource_type' => $type,
+                            'resource_subtype' => $subtype,
+                            'source_field' => $resource['source_field'] ?? '',
+                            'created_from' => 'collect_resources_processor'
+                        ]),
                         'created_at' => current_time('mysql'),
+                        'updated_at' => current_time('mysql'),
                     ]);
                     $savedCount++;
                 }
@@ -422,5 +432,56 @@ class CollectResourcesProcessor extends AbstractProcessor
         }
 
         return $savedCount;
+    }
+
+    /**
+     * Determine data type by URL using mime type detection
+     * 
+     * @param string $url
+     * @param string $defaultType
+     * @return string
+     */
+    private function determineDataTypeByUrl(string $url, string $defaultType = 'url'): string
+    {
+        // Get file extension
+        $path = parse_url($url, PHP_URL_PATH);
+        if (!$path) {
+            return $defaultType;
+        }
+
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        
+        // Image extensions
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'psd'];
+        if (in_array($extension, $imageExtensions)) {
+            return 'image';
+        }
+
+        // Video extensions
+        $videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v', '3gp'];
+        if (in_array($extension, $videoExtensions)) {
+            return 'video';
+        }
+
+        // Audio extensions
+        $audioExtensions = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'wma'];
+        if (in_array($extension, $audioExtensions)) {
+            return 'audio';
+        }
+
+        // Document extensions
+        $documentExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'rtf'];
+        if (in_array($extension, $documentExtensions)) {
+            return 'document';
+        }
+
+        // Archive extensions
+        $archiveExtensions = ['zip', 'rar', '7z', 'tar', 'gz', 'bz2'];
+        if (in_array($extension, $archiveExtensions)) {
+            return 'archive';
+        }
+
+        // Default to provided type or url
+        return $defaultType === 'url' ? 'url' : $defaultType;
     }
 }
