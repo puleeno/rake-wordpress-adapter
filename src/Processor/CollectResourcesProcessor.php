@@ -52,7 +52,7 @@ class CollectResourcesProcessor extends AbstractProcessor
             ];
 
             // Save resources to database
-            $savedCount = $this->saveResources($parentUrl, $resources);
+            $savedCount = $this->saveResources($parentUrl, $resources, $item);
 
             $this->log('Resources collected', [
                 'parent_url' => $parentUrl,
@@ -361,9 +361,10 @@ class CollectResourcesProcessor extends AbstractProcessor
      * 
      * @param string $parentUrl
      * @param array $resources
+     * @param ParsedDataItemInterface $item
      * @return int Number of resources saved
      */
-    private function saveResources(string $parentUrl, array $resources): int
+    private function saveResources(string $parentUrl, array $resources, ParsedDataItemInterface $item): int
     {
         global $wpdb;
         $resourcesTable = $wpdb->prefix . 'rake_resources';
@@ -393,45 +394,192 @@ class CollectResourcesProcessor extends AbstractProcessor
 
                 // Check if resource already exists
                 $existing = $wpdb->get_row($wpdb->prepare(
-                    "SELECT id FROM {$resourcesTable} WHERE guid = %s",
+                    "SELECT * FROM {$resourcesTable} WHERE guid = %s",
                     $resourceUrl
                 ), ARRAY_A);
 
-                if (!$existing) {
-                    // Determine data type using mime type detection
+                // Determine data type using mime type detection
                     $dataType = $this->determineDataTypeByUrl($resourceUrl, $resource['type'] ?? $type);
                     $subtype = $resource['subtype'] ?? '';
 
-                    // Create resource entry with parent_id
-                    $wpdb->insert($resourcesTable, [
-                        'parent_id' => $parentResourceId,
-                        'tooth_id' => 0, // Will be set later if needed
-                        'data_type' => $dataType,
-                        'guid' => $resourceUrl,
-                        'current_content' => $resource['content'] ?? '',
-                        'app_data_type' => $subtype,
-                        'app_guid' => '',
-                        'import_status' => 'pending',
-                        'import_retry' => 0,
-                        'imported_at' => null,
-                        'metadata' => json_encode([
-                            'source_url' => $resourceUrl,
-                            'parent_url' => $parentUrl,
-                            'parent_id' => $parentResourceId,
-                            'resource_type' => $type,
-                            'resource_subtype' => $subtype,
-                            'source_field' => $resource['source_field'] ?? '',
-                            'created_from' => 'collect_resources_processor'
-                        ]),
-                        'created_at' => current_time('mysql'),
-                        'updated_at' => current_time('mysql'),
-                    ]);
+                if ($existing) {
+                    // Update existing resource with new information
+                    $this->updateExistingResource($existing, $resource, $type, $subtype, $item, $parentUrl, $parentResourceId);
+                    $savedCount++;
+                } else {
+                    // Create new resource entry
+                    $this->createNewResource($resourceUrl, $resource, $type, $subtype, $item, $parentUrl, $parentResourceId);
                     $savedCount++;
                 }
             }
         }
 
         return $savedCount;
+    }
+
+    /**
+     * Update existing resource with new information
+     * 
+     * @param array $existing
+     * @param array $resource
+     * @param string $type
+     * @param string $subtype
+     * @param ParsedDataItemInterface $item
+     * @param string $parentUrl
+     * @param int $parentResourceId
+     * @return void
+     */
+    private function updateExistingResource(array $existing, array $resource, string $type, string $subtype, ParsedDataItemInterface $item, string $parentUrl, int $parentResourceId): void
+    {
+        global $wpdb;
+        $resourcesTable = $wpdb->prefix . 'rake_resources';
+        
+        // Get updated app data type and guid
+        $appDataType = $this->getAppDataType($item);
+        $appGuid = $this->getAppGuid($item);
+        
+        // Get existing metadata and update it
+        $existingMetadata = json_decode($existing['metadata'] ?? '{}', true) ?: [];
+        
+        // Update metadata with new information
+        $updatedMetadata = array_merge($existingMetadata, [
+            'source_url' => $resource['url'] ?? $existing['guid'],
+            'parent_url' => $parentUrl,
+            'parent_id' => $parentResourceId,
+            'resource_type' => $type,
+            'resource_subtype' => $subtype,
+            'source_field' => $resource['source_field'] ?? '',
+            'last_updated_from' => 'collect_resources_processor',
+            'duplicate_update' => true
+        ]);
+        
+        // Update the resource record
+        $wpdb->update(
+            $resourcesTable,
+            [
+                'parent_id' => $parentResourceId,
+                'current_content' => $resource['content'] ?? $existing['current_content'],
+                'app_data_type' => $appDataType,
+                'app_guid' => $appGuid,
+                'metadata' => json_encode($updatedMetadata),
+                'updated_at' => current_time('mysql'),
+            ],
+            ['id' => $existing['id']]
+        );
+        
+        $this->log('Resource updated (duplicate URL)', [
+            'resource_id' => $existing['id'],
+            'guid' => $existing['guid'],
+            'app_data_type' => $appDataType,
+            'app_guid' => $appGuid,
+        ]);
+    }
+
+    /**
+     * Create new resource entry
+     * 
+     * @param string $resourceUrl
+     * @param array $resource
+     * @param string $type
+     * @param string $subtype
+     * @param ParsedDataItemInterface $item
+     * @param string $parentUrl
+     * @param int $parentResourceId
+     * @return void
+     */
+    private function createNewResource(string $resourceUrl, array $resource, string $type, string $subtype, ParsedDataItemInterface $item, string $parentUrl, int $parentResourceId): void
+    {
+        global $wpdb;
+        $resourcesTable = $wpdb->prefix . 'rake_resources';
+        
+        // Determine data type using mime type detection
+        $dataType = $this->determineDataTypeByUrl($resourceUrl, $resource['type'] ?? $type);
+        
+        // Get app data type and guid from parsed item metadata
+        $appDataType = $this->getAppDataType($item);
+        $appGuid = $this->getAppGuid($item);
+        
+        // Create resource entry with parent_id
+        $wpdb->insert($resourcesTable, [
+            'parent_id' => $parentResourceId,
+            'tooth_id' => 0, // Will be set later if needed
+            'data_type' => $dataType,
+            'guid' => $resourceUrl,
+            'current_content' => $resource['content'] ?? '',
+            'app_data_type' => $appDataType,
+            'app_guid' => $appGuid,
+            'import_status' => 'pending',
+            'import_retry' => 0,
+            'imported_at' => null,
+            'metadata' => json_encode([
+                'source_url' => $resourceUrl,
+                'parent_url' => $parentUrl,
+                'parent_id' => $parentResourceId,
+                'resource_type' => $type,
+                'resource_subtype' => $subtype,
+                'source_field' => $resource['source_field'] ?? '',
+                'created_from' => 'collect_resources_processor'
+            ]),
+            'created_at' => current_time('mysql'),
+            'updated_at' => current_time('mysql'),
+        ]);
+        
+        $this->log('Resource created (new URL)', [
+            'resource_id' => $wpdb->insert_id,
+            'guid' => $resourceUrl,
+            'app_data_type' => $appDataType,
+            'app_guid' => $appGuid,
+        ]);
+    }
+
+    /**
+     * Get app data type from parsed item
+     * 
+     * @param ParsedDataItemInterface $item
+     * @return string
+     */
+    private function getAppDataType(ParsedDataItemInterface $item): string
+    {
+        // Check for specific content types in the parsed item
+        $postType = $item->get('post_type') ?? '';
+        $contentType = $item->get('content_type') ?? '';
+        $itemType = $item->get('type') ?? '';
+        
+        // Determine app data type based on content
+        if ($postType === 'product' || $contentType === 'product' || $itemType === 'product') {
+            return 'product';
+        } elseif ($postType === 'post' || $contentType === 'post') {
+            return 'post';
+        } elseif ($postType === 'page' || $contentType === 'page') {
+            return 'page';
+        } elseif ($item->get('product_id')) {
+            return 'product';
+        } elseif ($item->get('post_id')) {
+            return 'post';
+        }
+        
+        // Default to 'content' if no specific type found
+        return 'content';
+    }
+
+    /**
+     * Get app guid from parsed item
+     * 
+     * @param ParsedDataItemInterface $item
+     * @return string
+     */
+    private function getAppGuid(ParsedDataItemInterface $item): string
+    {
+        // Try to get ID from various fields
+        $id = $item->get('id') ?? 
+              $item->get('product_id') ?? 
+              $item->get('post_id') ?? 
+              $item->get('page_id') ?? 
+              $item->get('item_id') ?? 
+              $item->get('entity_id') ?? 
+              '';
+              
+        return (string)$id;
     }
 
     /**
