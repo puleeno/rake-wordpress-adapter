@@ -398,9 +398,22 @@ class CollectResourcesProcessor extends AbstractProcessor
                     $resourceUrl
                 ), ARRAY_A);
 
+                // Check checksum before processing
+                $checksumResult = $this->validateResourceChecksum($resourceUrl, $resource);
+                
+                if ($checksumResult['exists']) {
+                    // Resource already exists - use existing data
+                    $this->log('Resource already exists in checksums', [
+                        'url' => $resourceUrl,
+                        'app_new_type' => $checksumResult['app_new_type'],
+                        'app_new_guid' => $checksumResult['app_new_guid']
+                    ]);
+                    continue; // Skip processing since already downloaded
+                }
+
                 // Determine data type using mime type detection
-                    $dataType = $this->determineDataTypeByUrl($resourceUrl, $resource['type'] ?? $type);
-                    $subtype = $resource['subtype'] ?? '';
+                $dataType = $this->determineDataTypeByUrl($resourceUrl, $resource['type'] ?? $type);
+                $subtype = $resource['subtype'] ?? '';
 
                 if ($existing) {
                     // Update existing resource with new information
@@ -408,7 +421,13 @@ class CollectResourcesProcessor extends AbstractProcessor
                     $savedCount++;
                 } else {
                     // Create new resource entry
-                    $this->createNewResource($resourceUrl, $resource, $type, $subtype, $item, $parentUrl, $parentResourceId);
+                    $resourceId = $this->createNewResource($resourceUrl, $resource, $type, $subtype, $item, $parentUrl, $parentResourceId);
+                    
+                    // Save checksum after successful resource creation
+                    if ($resourceId) {
+                        $this->saveResourceChecksum($resourceId, $resourceUrl, $resource, $checksumResult['checksum']);
+                    }
+                    
                     $savedCount++;
                 }
             }
@@ -631,5 +650,73 @@ class CollectResourcesProcessor extends AbstractProcessor
 
         // Default to provided type or url
         return $defaultType === 'url' ? 'url' : $defaultType;
+    }
+
+    /**
+     * Validate resource checksum against wpd4_rake_file_checksums
+     * 
+     * @param string $url
+     * @param array $resource
+     * @return array
+     */
+    private function validateResourceChecksum(string $url, array $resource): array
+    {
+        global $wpdb;
+        $checksumsTable = $wpdb->prefix . 'rake_file_checksums';
+        
+        // Generate checksum from URL
+        $checksum = md5($url);
+        
+        // Check if checksum exists
+        $existing = $wpdb->get_row($wpdb->prepare(
+            "SELECT app_new_type, app_new_guid FROM {$checksumsTable} WHERE checksum = %s",
+            $checksum
+        ), ARRAY_A);
+        
+        if ($existing) {
+            return [
+                'exists' => true,
+                'checksum' => $checksum,
+                'app_new_type' => $existing['app_new_type'],
+                'app_new_guid' => $existing['app_new_guid']
+            ];
+        }
+        
+        return [
+            'exists' => false,
+            'checksum' => $checksum,
+            'app_new_type' => null,
+            'app_new_guid' => null
+        ];
+    }
+    
+    /**
+     * Save resource checksum to wpd4_rake_file_checksums
+     * 
+     * @param int $resourceId
+     * @param string $url
+     * @param array $resource
+     * @param string $checksum
+     * @return bool
+     */
+    private function saveResourceChecksum(int $resourceId, string $url, array $resource, string $checksum): bool
+    {
+        global $wpdb;
+        $checksumsTable = $wpdb->prefix . 'rake_file_checksums';
+        
+        $result = $wpdb->insert(
+            $checksumsTable,
+            [
+                'resource_id' => $resourceId,
+                'checksum' => $checksum,
+                'app_new_type' => null, // Will be updated when resource is processed
+                'app_new_guid' => null, // Will be updated when resource is processed
+                'created_at' => current_time('mysql'),
+                'updated_at' => current_time('mysql')
+            ],
+            ['%d', '%s', '%s', '%s', '%s', '%s']
+        );
+        
+        return $result !== false;
     }
 }
