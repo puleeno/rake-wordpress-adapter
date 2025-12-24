@@ -106,7 +106,7 @@ class WordPressFileDownloaderClient implements FileDownloaderClientInterface
                 }
             } catch (\Exception $e) {
                 // Checksum calculation failed, but do not fail the download
-                error_log('WordPressFileDownloaderClient: Failed to calculate checksum: ' . $e->getMessage());
+                \Rake\Facade\Logger::warning('WordPressFileDownloaderClient: Failed to calculate checksum: ' . $e->getMessage());
             }
         }
 
