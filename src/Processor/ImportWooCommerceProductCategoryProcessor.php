@@ -1,6 +1,6 @@
 <?php
 
-namespace RamphorRake\Adapter\Processor;
+namespace Puleeno\Rake\WordPress\Processor;
 
 use Rake\Processor\AbstractProcessor;
 use Rake\Contracts\Entities\ParsedDataItemInterface;

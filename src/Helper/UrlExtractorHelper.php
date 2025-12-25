@@ -1,6 +1,6 @@
 <?php
 
-namespace RamphorRake\Adapter\Helper;
+namespace Puleeno\Rake\WordPress\Helper;
 
 /**
  * URL Extractor Helper
